@@ -1,0 +1,7 @@
+##Overview of interpretation, phenotypes, observations, and methods
+#VariationID:                   the identifier assigned by ClinVar
+#VariationID	ClinicalSignificance	DateLastEvaluated	Description	SubmittedPhenotypeInfo	ReportedPhenotypeInfo	ReviewStatus	CollectionMethod	OriginCounts	Submitter	SCV	SubmittedGeneSymbol	ExplanationOfInterpretation	SomaticClinicalImpact	Oncogenicity	ContributesToAggregateClassification
+1002	Uncertain significance	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabB	SCV0000002.1	-	-	-	-	-
+1002	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabA	SCV0000003.1	-	-	-	-	-
+1004	Benign	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabB	SCV0000008.1	-	-	-	-	-
+1006	Likely benign	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabC	SCV0000015.1	-	-	-	-	-

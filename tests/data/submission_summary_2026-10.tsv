@@ -1,0 +1,18 @@
+##Overview of interpretation, phenotypes, observations, and methods
+#VariationID:                   the identifier assigned by ClinVar
+#VariationID	ClinicalSignificance	DateLastEvaluated	Description	SubmittedPhenotypeInfo	ReportedPhenotypeInfo	ReviewStatus	CollectionMethod	OriginCounts	Submitter	SCV	SubmittedGeneSymbol	ExplanationOfInterpretation	SomaticClinicalImpact	Oncogenicity	ContributesToAggregateClassification
+1001	Likely pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabA	SCV0000001.1	-	-	-	-	-
+1001	Uncertain significance	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabB	SCV0000002.1	-	-	-	-	-
+1002	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabA	SCV0000003.2	-	-	-	-	-
+1002	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	ExpertPanel	SCV0000004.1	-	-	-	-	-
+1003	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabA	SCV0000005.1	-	-	-	-	-
+1003	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabB	SCV0000006.1	-	-	-	-	-
+1003	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabC	SCV0000007.1	-	-	-	-	-
+1004	Likely benign	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabB	SCV0000008.1	-	-	-	-	-
+1005	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabC	SCV0000009.1	-	-	-	-	-
+1005	Benign	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabD	SCV0000010.1	-	-	-	-	-
+1007	Benign	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabD	SCV0000011.1	-	-	-	-	-
+1007	not provided	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabD	SCV0000011.1	-	-	-	-	-
+1008	Likely pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabA	SCV0000012.1	-	-	-	-	-
+1009	Benign	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabB	SCV0000013.1	-	-	-	-	-
+5555	Pathogenic	Mar 01, 2025	-	-	-	criteria provided, single submitter	clinical testing	-	LabA	SCV0000014.1	-	-	-	-	-
