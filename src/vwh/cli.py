@@ -7,11 +7,13 @@ import sys
 from pathlib import Path
 from typing import Annotated
 
+import duckdb
 import typer
 
 from vwh import __version__
 from vwh.config import data_paths, load_config
 from vwh.db import Engine, connect, migrate
+from vwh.load import LoadError
 from vwh.logs import get_logger, setup_logging
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help=__doc__)
@@ -27,6 +29,15 @@ DsnOpt = Annotated[
 ]
 
 SOURCES = ["genes", "clinvar", "gnomad", "mavedb"]
+
+PG_ERRORS: tuple[type[Exception], ...] = ()
+try:  # psycopg is optional: only the PostgreSQL path needs it
+    import psycopg
+
+    PG_ERRORS = (psycopg.Error,)
+except ImportError:
+    pass
+LOAD_ERRORS: tuple[type[Exception], ...] = (LoadError, OSError, duckdb.Error, *PG_ERRORS)
 TABLE_COUNTS = [
     "source_release",
     "provenance",
@@ -150,14 +161,20 @@ def load(
             "source": source,
         },
     )
-    if source in ("all", "clinvar"):
-        for rel in [release] if release else sorted(cfg["clinvar"]["releases"]):
-            ld.load_clinvar(engine, paths, rel)
-        ld.load_panel(engine, paths)
-    if source in ("all", "gnomad"):
-        ld.load_gnomad(engine, paths, cfg["gnomad"]["release"])
-    if source in ("all", "mavedb"):
-        ld.load_mavedb(engine, paths)
+    try:
+        if source in ("all", "clinvar"):
+            for rel in [release] if release else sorted(cfg["clinvar"]["releases"]):
+                ld.load_clinvar(engine, paths, rel)
+            ld.load_panel(engine, paths)
+        if source in ("all", "gnomad"):
+            ld.load_gnomad(engine, paths, cfg["gnomad"]["release"])
+        if source in ("all", "mavedb"):
+            ld.load_mavedb(engine, paths)
+    except LOAD_ERRORS as exc:
+        # The release transaction has already rolled back; log and exit non-zero.
+        log.error("load failed", extra={"error": str(exc), "error_type": type(exc).__name__})
+        engine.close()
+        raise typer.Exit(1) from exc
     counts = {t: engine.scalar(f"SELECT count(*) FROM {t}") for t in TABLE_COUNTS}
     results = val.run_checks(engine)
     failed = [r.name for r in results if not r.passed]

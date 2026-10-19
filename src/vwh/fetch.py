@@ -325,13 +325,11 @@ def fetch_gnomad(cfg: dict[str, Any], paths: Paths) -> list[dict[str, Any]]:
     return out
 
 
-def _bcftools_region(url: str, region: str, keep: str | None, dest: Path, workdir: Path) -> None:
+def _bcftools_region(url: str, region: str, keep: str, dest: Path, workdir: Path) -> None:
     # htslib caches the remote .tbi in the working directory, so run from the
     # raw folder rather than the repository.
     view = [BCFTOOLS, "view", "-r", region, "-Ou", url]
-    tail = [BCFTOOLS, "view", "-Oz"]
-    if keep:
-        tail = [BCFTOOLS, "annotate", "-x", f"^{keep}", "-Oz"]
+    tail = [BCFTOOLS, "annotate", "-x", f"^{keep}", "-Oz"]
     workdir.mkdir(parents=True, exist_ok=True)
     cwd = Path.cwd()
     try:

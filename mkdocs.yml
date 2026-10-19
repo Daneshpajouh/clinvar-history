@@ -1,0 +1,27 @@
+site_name: variant-warehouse
+repo_url: https://github.com/Daneshpajouh/variant-warehouse
+theme:
+  name: material
+markdown_extensions:
+  - tables
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+nav:
+  - Overview: index.md
+  - For non-specialists: explainer.md
+  - ER diagram: er_diagram.md
+  - Data dictionary: data_dictionary.md
+  - Data sources: data_sources.md
+  - Code walk-through: code_walkthrough.md
+  - Monthly refresh SOP: sop_monthly_refresh.md
+  - Validation report: validation.md
+  - Performance: performance.md
+  - Testing: testing.md
+  - Logging: logging.md
+  - Operations:
+      - Runbook: operations/runbook.md
+      - Postmortem template: operations/postmortem_template.md
+      - "2026-10-19 build failures": operations/postmortems/2026-10-19-clinvar-refresh-build.md

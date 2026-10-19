@@ -1,5 +1,6 @@
 # Sources and selections for one warehouse build.
-# Paths are relative to the data directory (VWH_DATA_DIR, default ./data).
+# Files are read from and written to the data directory: VWH_DATA_DIR or --data-dir,
+# default ./data.
 
 clinvar:
   # Monthly releases from the archive folder. The main-folder files are
@@ -33,21 +34,3 @@ mavedb:
     - {urn: "urn:mavedb:00000050-a-1", gene: MSH2, match_level: protein}
     - {urn: "urn:mavedb:00001205-a-1", gene: CHEK2, match_level: protein}
 
-encode:
-  # Collection endpoint; the portal's robots.txt disallows /search/ and limit=all.
-  url: https://www.encodeproject.org/experiments/
-  assay_title: TF ChIP-seq
-  biosamples: [K562, HepG2]
-  page_size: 1000
-
-hprc:
-  release: "1.1"
-  url: https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz
-
-reference:
-  fasta_url_template: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chr{chrom}.fa.gz
-  chain_url: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHs1.over.chain.gz
-  chain_target: T2T-CHM13v2.0
-
-thresholds:
-  rare_af: 0.001

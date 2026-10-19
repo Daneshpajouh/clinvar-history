@@ -2,88 +2,135 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "variant-warehouse build configuration",
   "type": "object",
-  "required": ["clinvar", "panel", "gnomad", "mavedb", "encode", "hprc", "reference", "thresholds"],
+  "required": [
+    "clinvar",
+    "panel",
+    "gnomad",
+    "mavedb"
+  ],
   "properties": {
     "clinvar": {
       "type": "object",
-      "required": ["base_url", "releases", "assembly"],
+      "required": [
+        "base_url",
+        "releases",
+        "assembly"
+      ],
       "properties": {
-        "base_url": {"type": "string", "pattern": "^(ftp|https)://"},
+        "base_url": {
+          "type": "string",
+          "pattern": "^(ftp|https)://"
+        },
         "releases": {
           "type": "array",
           "minItems": 1,
-          "items": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}$"},
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}$"
+          },
           "uniqueItems": true
         },
-        "assembly": {"enum": ["GRCh38"]}
+        "assembly": {
+          "enum": [
+            "GRCh38"
+          ]
+        }
       }
     },
     "panel": {
       "type": "object",
-      "required": ["genes", "ensembl_lookup_url", "flank_bp"],
+      "required": [
+        "genes",
+        "ensembl_lookup_url",
+        "flank_bp"
+      ],
       "properties": {
-        "genes": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[A-Z0-9-]+$"}},
-        "ensembl_lookup_url": {"type": "string"},
-        "flank_bp": {"type": "integer", "minimum": 0, "maximum": 100000}
+        "genes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z0-9-]+$"
+          }
+        },
+        "ensembl_lookup_url": {
+          "type": "string"
+        },
+        "flank_bp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100000
+        }
       }
     },
     "gnomad": {
       "type": "object",
-      "required": ["release", "dataset", "url_template", "ancestry_groups"],
+      "required": [
+        "release",
+        "dataset",
+        "url_template",
+        "ancestry_groups"
+      ],
       "properties": {
-        "release": {"type": "string"},
-        "dataset": {"enum": ["joint", "exomes", "genomes"]},
-        "url_template": {"type": "string", "pattern": "\\{chrom\\}"},
-        "ancestry_groups": {"type": "array", "items": {"type": "string"}}
-      }
-    },
-    "mavedb": {
-      "type": "object",
-      "required": ["api", "score_sets"],
-      "properties": {
-        "api": {"type": "string"},
-        "score_sets": {
+        "release": {
+          "type": "string"
+        },
+        "dataset": {
+          "enum": [
+            "joint",
+            "exomes",
+            "genomes"
+          ]
+        },
+        "url_template": {
+          "type": "string",
+          "pattern": "\\{chrom\\}"
+        },
+        "ancestry_groups": {
           "type": "array",
           "items": {
-            "type": "object",
-            "required": ["urn", "gene", "match_level"],
-            "properties": {
-              "urn": {"type": "string", "pattern": "^urn:mavedb:[0-9]{8}-[0-9a-z]+-[0-9]+$"},
-              "gene": {"type": "string"},
-              "match_level": {"enum": ["nucleotide", "protein"]}
-            }
+            "type": "string"
           }
         }
       }
     },
-    "encode": {
+    "mavedb": {
       "type": "object",
-      "required": ["url", "assay_title", "biosamples", "page_size"],
+      "required": [
+        "api",
+        "score_sets"
+      ],
       "properties": {
-        "url": {"type": "string"},
-        "assay_title": {"type": "string"},
-        "biosamples": {"type": "array", "items": {"type": "string"}},
-        "page_size": {"type": "integer", "minimum": 1, "maximum": 5000}
+        "api": {
+          "type": "string"
+        },
+        "score_sets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "urn",
+              "gene",
+              "match_level"
+            ],
+            "properties": {
+              "urn": {
+                "type": "string",
+                "pattern": "^urn:mavedb:[0-9]{8}-[0-9a-z]+-[0-9]+$"
+              },
+              "gene": {
+                "type": "string"
+              },
+              "match_level": {
+                "enum": [
+                  "nucleotide",
+                  "protein"
+                ]
+              }
+            }
+          }
+        }
       }
-    },
-    "hprc": {
-      "type": "object",
-      "required": ["release", "url"],
-      "properties": {"release": {"type": "string"}, "url": {"type": "string"}}
-    },
-    "reference": {
-      "type": "object",
-      "required": ["fasta_url_template", "chain_url", "chain_target"],
-      "properties": {
-        "fasta_url_template": {"type": "string"},
-        "chain_url": {"type": "string"},
-        "chain_target": {"type": "string"}
-      }
-    },
-    "thresholds": {
-      "type": "object",
-      "required": ["rare_af"],
-      "properties": {"rare_af": {"type": "number", "exclusiveMinimum": 0, "maximum": 0.5}}
     }
   }
 }
