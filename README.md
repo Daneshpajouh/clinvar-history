@@ -4,14 +4,18 @@ A versioned SQL database of human variant interpretations built from public
 releases: ClinVar (two monthly releases, genome-wide), gnomAD v4.1 allele
 frequencies for ten hereditary cancer genes, and MaveDB functional scores
 (eight score sets covering seven of those genes). It runs on DuckDB for a
-single analyst and on PostgreSQL for shared use, from the same migrations and
-the same queries.
+single analyst. The same migrations and queries pass the test suite on
+PostgreSQL, but a full PostgreSQL load is blocked by one primary key (see
+Limits).
 
 ## Why
 
-ClinVar changes every month. Between the 2025-10 and 2026-10 releases, 20,364
-variants went from "uncertain significance" to "conflicting classifications",
-and 1,415 went from uncertain to pathogenic or likely pathogenic. A lab that
+ClinVar changes every month. Between the 2025-10 and 2026-10 monthly
+`variant_summary` releases, 20,364 variants went from "uncertain significance"
+to "conflicting classifications", and 1,415 went from uncertain to pathogenic
+or likely pathogenic. (clinvar-delta counts 19,907 VUS to conflicting from
+the weekly GRCh38 VCFs of 2025-10-13 and 2026-10-11; the files and dates
+differ.) A lab that
 reports variants needs to answer "what did ClinVar say when we signed this
 report, and what does it say now?", and to check a classification against
 population frequency and functional assays. That needs every release kept,
@@ -21,7 +25,7 @@ loads that cannot half-finish, and a record of which file each row came from.
 ## Quick start (fixtures, under a minute)
 
 ```
-git clone <this repository> && cd clinvar-history
+git clone https://github.com/Daneshpajouh/clinvar-history && cd clinvar-history
 python3 -m venv .venv && .venv/bin/pip install -e ".[postgres,dev]"
 .venv/bin/pytest -q
 ```
@@ -46,7 +50,7 @@ remote VCF) and about 6 GB free in the data directory: 1.60 GB of raw files,
 0.59 GB of staging Parquet and a 3.4 GB DuckDB file in the 2026-10-19 build.
 
 ```
-export CLINVAR_HISTORY_DATA_DIR=/path/with/5GB/free
+export CLINVAR_HISTORY_DATA_DIR=/path/with/6GB/free
 clinvar-history fetch genes && clinvar-history fetch clinvar && clinvar-history fetch gnomad && clinvar-history fetch mavedb
 clinvar-history stage clinvar && clinvar-history stage gnomad && clinvar-history stage mavedb
 clinvar-history load            # add --dsn postgresql://... for PostgreSQL
