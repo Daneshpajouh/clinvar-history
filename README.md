@@ -34,10 +34,10 @@ With a PostgreSQL server the same suite runs a second time against it
 (`docker compose up -d db`, then
 `VWH_PG_DSN=postgresql://vwh:vwh@127.0.0.1:55432/vwh .venv/bin/pytest -q`: 85 passed in
 5.58 s).
-The Docker image runs the same 63 tests on Debian:
-`docker build -t variant-warehouse:1.0.0 .` then
-`docker run --rm -e VWH_PG_DSN=... --entrypoint python variant-warehouse:1.0.0 -m pytest -q`
-(63 passed in 5.68 s on 2026-10-19).
+The Docker image runs the same 85 tests on Debian:
+`docker build -t variant-warehouse:1.0.1 .` then
+`docker run --rm -e VWH_PG_DSN=... --entrypoint python variant-warehouse:1.0.1 -m pytest -q`
+(85 passed in 6.79 s on 2026-10-19, image built from a fresh clone).
 
 ## Full build (real data)
 
