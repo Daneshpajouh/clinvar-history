@@ -41,7 +41,8 @@ With a PostgreSQL server the same suite runs a second time against it
 The Docker image runs the same 85 tests on Debian:
 `docker build -t clinvar-history:1.0.1 .` then
 `docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.1 -m pytest -q`
-(85 passed in 6.79 s on 2026-10-19, image built from a fresh clone).
+(85 passed in 6.79 s on 2026-10-19, image built from a fresh clone). Tagged
+releases publish the image as `ghcr.io/daneshpajouh/clinvar-history`.
 
 ## Full build (real data)
 
