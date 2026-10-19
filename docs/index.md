@@ -49,7 +49,8 @@ vwh query 03        # reclassifications between the two releases
 ```
 
 Measured on 2026-10-19 (Apple M3 Ultra, 96 GB, macOS, DuckDB 1.5.6, 6 threads):
-31 input files, 1.60 GB. `vwh load`
+31 input files, 1.60 GB. `vwh stage` took 51.6 s for both ClinVar releases,
+8.3 s for gnomAD and 0.8 s for MaveDB. `vwh load`
 took 115 s wall time with a 6.9 GB peak memory footprint and produced a 3.7 GB
 DuckDB file.
 

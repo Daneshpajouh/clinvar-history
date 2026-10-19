@@ -1,4 +1,4 @@
-"""Command line entry point: vwh fetch | stage | load | validate | query | bench | export."""
+"""vwh: fetch, stage, load, unload, validate, query, bench and dictionary."""
 
 from __future__ import annotations
 
