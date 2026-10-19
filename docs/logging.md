@@ -20,7 +20,8 @@ fetch and load times, rows staged and loaded) go into the `provenance`
 table inside the load transaction.
 
 Excerpt from the full build on 2026-10-19 (`clinvar-history --log-file load_all.jsonl
-load all`), 2026-10 release:
+load all`), 2026-10 release. The build ran before the package was renamed from
+`vwh`; logger names are shown as the current code writes them.
 
 ```
 {"ts": "2026-10-19T11:56:36-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "release", "seconds": 2.07}
