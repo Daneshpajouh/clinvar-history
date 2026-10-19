@@ -16,16 +16,17 @@ def rows(engine: Engine, name: str) -> list[tuple[Any, ...]]:
 
 
 def test_conflicting_by_gene(loaded_engine: Engine) -> None:
-    # V5 is the only conflicting record; V6 (GENEX) left ClinVar in 2026-10.
-    assert rows(loaded_engine, "01") == [("GENEX", 1, 1, 100.0, 1)]
+    # GENEX: V5 is conflicting, V10 is a copy number loss without VCF alleles;
+    # V6 left ClinVar in 2026-10 and no longer counts.
+    assert rows(loaded_engine, "01") == [("GENEX", 1, 2, 50.0, 1)]
 
 
 def test_review_star_distribution(loaded_engine: Engine) -> None:
     assert rows(loaded_engine, "02") == [
-        (3, 1, 12.5, 12.5),
-        (2, 2, 25.0, 37.5),
-        (1, 4, 50.0, 87.5),
-        (0, 1, 12.5, 100.0),
+        (3, 1, 11.11, 11.11),
+        (2, 2, 22.22, 33.33),
+        (1, 5, 55.56, 88.89),
+        (0, 1, 11.11, 100.0),
     ]
 
 
@@ -45,9 +46,17 @@ def test_rare_plp_by_ancestry(loaded_engine: Engine) -> None:
 
 def test_plp_common_in_a_group(loaded_engine: Engine) -> None:
     assert rows(loaded_engine, "05") == [
-        ("BRCA1", "17-43045712-G-A", "NM_007294.4(BRCA1):c.5096G>A (p.Arg1699Gln)", 1,
-         "afr", 0.002, 4, 2000),
-    ]  # fmt: skip
+        (
+            "BRCA1",
+            "17-43045712-G-A",
+            "NM_007294.4(BRCA1):c.5096G>A (p.Arg1699Gln)",
+            1,
+            "afr",
+            0.002,
+            4,
+            2000,
+        ),
+    ]
 
 
 def test_mave_concordance(loaded_engine: Engine) -> None:

@@ -1,0 +1,83 @@
+┌─────────────────────────────────────┐
+│┌───────────────────────────────────┐│
+││    Query Profiling Information    ││
+│└───────────────────────────────────┘│
+└─────────────────────────────────────┘
+EXPLAIN ANALYZE SELECT clinsig_class, count(*) FROM read_parquet('/Volumes/MXFAST/data/portfolio/variant-warehouse-run/bench/current_unsorted.parquet') WHERE chrom = '17' AND pos BETWEEN 43044292 AND 43170245 GROUP BY clinsig_class ORDER BY clinsig_class
+┌────────────────────────────────────────────────┐
+│┌──────────────────────────────────────────────┐│
+││              Total Time: 0.0078s             ││
+│└──────────────────────────────────────────────┘│
+└────────────────────────────────────────────────┘
+┌───────────────────────────┐
+│           QUERY           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│      EXPLAIN_ANALYZE      │
+│    ────────────────────   │
+│                           │
+│           0 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│          ORDER_BY         │
+│    ────────────────────   │
+│ read_parquet.clinsig_class│
+│             ASC           │
+│                           │
+│                           │
+│                           │
+│           5 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│       HASH_GROUP_BY       │
+│    ────────────────────   │
+│         Groups: #0        │
+│                           │
+│        Aggregates:        │
+│        count_star()       │
+│                           │
+│                           │
+│                           │
+│           5 rows          │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         PROJECTION        │
+│    ────────────────────   │
+│       clinsig_class       │
+│                           │
+│                           │
+│                           │
+│        15,336 rows        │
+│           0.00s           │
+└─────────────┬─────────────┘
+┌─────────────┴─────────────┐
+│         TABLE_SCAN        │
+│    ────────────────────   │
+│         Function:         │
+│        READ_PARQUET       │
+│                           │
+│        Projections:       │
+│       clinsig_class       │
+│                           │
+│          Filters:         │
+│         chrom='17'        │
+│   pos>=43044292 AND pos<  │
+│         =43170245         │
+│                           │
+│    Total Files Read: 1    │
+│                           │
+│        Filename(s):       │
+│    /Volumes/MXFAST/data   │
+│     /portfolio/variant    │
+│    -warehouse-run/bench   │
+│ /current_unsorted.parquet │
+│                           │
+│                           │
+│                           │
+│        15,336 rows        │
+│           0.03s           │
+└───────────────────────────┘
+

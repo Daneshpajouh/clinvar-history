@@ -1,0 +1,4 @@
+# Applied migrations are frozen by their SHA-256 in schema_migrations, so
+# layout rules are not enforced on files that already shipped.
+[sqlfluff]
+exclude_rules = AM03, ST06, RF04, LT05, LT12, ST09

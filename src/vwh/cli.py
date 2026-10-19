@@ -27,6 +27,19 @@ DsnOpt = Annotated[
 ]
 
 SOURCES = ["genes", "clinvar", "gnomad", "mavedb"]
+TABLE_COUNTS = [
+    "source_release",
+    "provenance",
+    "gene",
+    "variant",
+    "clinvar_variation",
+    "classification",
+    "submitter",
+    "submission",
+    "population_frequency",
+    "score_set",
+    "functional_score",
+]
 
 
 @app.callback()
@@ -91,9 +104,11 @@ def stage(
             clinvar.stage_release(paths.raw / "clinvar", paths.staging, rel)
     elif source == "gnomad":
         gnomad.stage(
-            paths.raw / "gnomad", paths.staging, cfg["gnomad"]["ancestry_groups"],
+            paths.raw / "gnomad",
+            paths.staging,
+            cfg["gnomad"]["ancestry_groups"],
             cfg["gnomad"]["release"],
-        )  # fmt: skip
+        )
     elif source == "mavedb":
         mavedb.stage(paths.raw / "mavedb", paths.staging, cfg["mavedb"]["score_sets"])
     else:
@@ -109,12 +124,32 @@ def load(
     dsn: DsnOpt = None,
 ) -> None:
     """Apply migrations, then load staged data. Re-running with the same files is a no-op."""
+    import time
+
     from vwh import load as ld
+    from vwh import validate as val
+    from vwh.fetch import read_manifest
 
     cfg = load_config(config)
     paths = data_paths(data_dir)
     engine = _engine(dsn, data_dir)
-    migrate(engine)
+    started = time.monotonic()
+    applied = migrate(engine)
+    schema_version = engine.scalar("SELECT max(filename) FROM schema_migrations")
+    for row in read_manifest(paths):
+        if row["source"] in ("clinvar", "gnomad", "mavedb") and source in ("all", row["source"]):
+            log.info(
+                "input", extra={k: row[k] for k in ("source", "release", "url", "path", "sha256")}
+            )
+    log.info(
+        "load start",
+        extra={
+            "target": engine.name,
+            "schema_version": schema_version,
+            "migrations_applied": applied,
+            "source": source,
+        },
+    )
     if source in ("all", "clinvar"):
         for rel in [release] if release else sorted(cfg["clinvar"]["releases"]):
             ld.load_clinvar(engine, paths, rel)
@@ -123,7 +158,22 @@ def load(
         ld.load_gnomad(engine, paths, cfg["gnomad"]["release"])
     if source in ("all", "mavedb"):
         ld.load_mavedb(engine, paths)
+    counts = {t: engine.scalar(f"SELECT count(*) FROM {t}") for t in TABLE_COUNTS}
+    results = val.run_checks(engine)
+    failed = [r.name for r in results if not r.passed]
+    log.info(
+        "load summary",
+        extra={
+            "status": "ok" if not failed else "validation_failed",
+            "seconds": round(time.monotonic() - started, 1),
+            "rows": counts,
+            "checks_passed": len(results) - len(failed),
+            "checks_failed": failed,
+        },
+    )
     engine.close()
+    if failed:
+        raise typer.Exit(1)
 
 
 @app.command()
@@ -196,6 +246,19 @@ def bench(
     rows = bm.run_all(paths, dsn=dsn, repeats=repeats)
     bm.write_csv(rows, out)
     typer.echo(json.dumps(bm.machine_info(), indent=1))
+
+
+@app.command()
+def dictionary(
+    data_dir: DataDirOpt = None,
+    out: Annotated[Path, typer.Option(help="Markdown output")] = Path("docs/data_dictionary.md"),
+) -> None:
+    """Regenerate the data dictionary from the loaded DuckDB catalogue."""
+    from vwh.dictionary import render
+
+    engine = _engine(None, data_dir)
+    out.write_text(render(engine))
+    engine.close()
 
 
 if __name__ == "__main__":

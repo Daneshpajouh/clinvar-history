@@ -1,0 +1,22 @@
+Finalize GroupAggregate  (cost=81840.48..81843.59 rows=5 width=12) (actual time=60.273..64.607 rows=5 loops=1)
+  Group Key: clinsig_class
+  Buffers: shared hit=47724
+  ->  Gather Merge  (cost=81840.48..81843.49 rows=10 width=12) (actual time=60.123..64.598 rows=15 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=47724
+        ->  Partial GroupAggregate  (cost=80840.45..80842.31 rows=5 width=12) (actual time=58.105..58.408 rows=5 loops=3)
+              Group Key: clinsig_class
+              Buffers: shared hit=47724
+              ->  Sort  (cost=80840.45..80841.06 rows=241 width=4) (actual time=58.006..58.146 rows=5112 loops=3)
+                    Sort Key: clinsig_class
+                    Sort Method: quicksort  Memory: 193kB
+                    Buffers: shared hit=47724
+                    Worker 0:  Sort Method: quicksort  Memory: 97kB
+                    Worker 1:  Sort Method: quicksort  Memory: 193kB
+                    ->  Parallel Seq Scan on bench_cur  (cost=0.00..80830.92 rows=241 width=4) (actual time=0.283..57.538 rows=5112 loops=3)
+                          Filter: ((pos >= 43044292) AND (pos <= 43170245) AND (chrom = '17'::text))
+                          Rows Removed by Filter: 1513280
+                          Buffers: shared hit=47608
+Planning Time: 0.061 ms
+Execution Time: 64.637 ms

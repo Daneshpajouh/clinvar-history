@@ -1,0 +1,11 @@
+[sqlfluff]
+dialect = postgres
+max_line_length = 100
+# AM03: "ORDER BY n DESC, name" is clear without ASC on the tie-breaker.
+# ST06: queries keep the reader's column order, not wildcard-first.
+# RF04: column names such as source, label, name and filter are SQL keywords;
+# renaming them would change the schema.
+exclude_rules = AM03, ST06, RF04
+
+[sqlfluff:indentation]
+tab_space_size = 4

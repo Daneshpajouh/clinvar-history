@@ -24,16 +24,15 @@ from vwh.logs import get_logger
 
 log = get_logger(__name__)
 
-BCFTOOLS = shutil.which("bcftools") or "/opt/homebrew/bin/bcftools"
+BCFTOOLS = shutil.which("bcftools") or "bcftools"
 USER_AGENT = "variant-warehouse/1.0 (research portfolio; contact via GitHub Daneshpajouh)"
 
 TERMS = {
-    "clinvar": "NCBI places no restrictions on use or distribution; "
+    "clinvar": "NCBI: no restrictions on use or distribution; "
     "https://www.ncbi.nlm.nih.gov/home/about/policies/",
-    "gnomad": "CC0 1.0; https://gnomad.broadinstitute.org/policies",
+    "gnomad": "gnomAD terms of use; https://gnomad.broadinstitute.org/terms",
     "mavedb": "Per score set licence, recorded in score_set.licence",
-    "ensembl": "Ensembl data have no restrictions; "
-    "https://www.ensembl.org/info/about/legal/disclaimer.html",
+    "ensembl": "Ensembl REST API terms; https://www.ensembl.org/info/about/legal/",
 }
 
 
@@ -98,8 +97,10 @@ def remote_size(url: str) -> int | None:
     """Content-Length from a HEAD request (FTP servers report SIZE the same way)."""
     proc = subprocess.run(
         ["curl", "-sSI", "-L", "-m", "60", "-A", USER_AGENT, url],
-        capture_output=True, text=True, check=False,
-    )  # fmt: skip
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     sizes = [
         int(line.split(":", 1)[1])
         for line in proc.stdout.splitlines()
@@ -109,17 +110,36 @@ def remote_size(url: str) -> int | None:
 
 
 def curl(
-    url: str, dest: Path, *, max_time: int = 3600, accept: str | None = None, check_size: bool = False
+    url: str,
+    dest: Path,
+    *,
+    max_time: int = 3600,
+    accept: str | None = None,
+    check_size: bool = False,
 ) -> None:
     """Fetch one URL with curl. The exit code is read before anything else runs."""
     dest.parent.mkdir(parents=True, exist_ok=True)
     part = dest.with_name(f".{dest.name}.part")
     cmd = [
-        "curl", "-sS", "--fail", "-L",
-        "-m", str(max_time), "--connect-timeout", "60",
-        "--retry", "5", "--retry-delay", "20", "--retry-all-errors",
-        "-A", USER_AGENT, "-o", str(part), url,
-    ]  # fmt: skip
+        "curl",
+        "-sS",
+        "--fail",
+        "-L",
+        "-m",
+        str(max_time),
+        "--connect-timeout",
+        "60",
+        "--retry",
+        "5",
+        "--retry-delay",
+        "20",
+        "--retry-all-errors",
+        "-A",
+        USER_AGENT,
+        "-o",
+        str(part),
+        url,
+    ]
     if accept:
         cmd[1:1] = ["-H", f"Accept: {accept}"]
     started = time.monotonic()
@@ -137,7 +157,11 @@ def curl(
     part.replace(dest)
     log.info(
         "download",
-        extra={"url": url, "bytes": dest.stat().st_size, "seconds": round(time.monotonic() - started, 1)},
+        extra={
+            "url": url,
+            "bytes": dest.stat().st_size,
+            "seconds": round(time.monotonic() - started, 1),
+        },
     )
 
 
@@ -177,7 +201,9 @@ def fetch_clinvar(cfg: dict[str, Any], paths: Paths, release: str) -> list[dict[
             raise FetchError(f"{dest}: {dest.stat().st_size} bytes, server reports {expected}")
         if not _gzip_ok(dest):
             raise FetchError(f"{dest} is not a complete gzip stream")
-        out.append(record(paths, source="clinvar", release=release, url=url, path=dest, method=method))
+        out.append(
+            record(paths, source="clinvar", release=release, url=url, path=dest, method=method)
+        )
     return out
 
 
@@ -214,13 +240,18 @@ def fetch_genes(cfg: dict[str, Any], paths: Paths) -> dict[str, Any]:
     bed = paths.raw / "ensembl" / "regions.bed"
     bed.write_text(
         "".join(
-            f"{g['chrom']}\t{g['start'] - 1 - flank}\t{g['end'] + flank}\t{g['symbol']}\n" for g in genes
+            f"{g['chrom']}\t{g['start'] - 1 - flank}\t{g['end'] + flank}\t{g['symbol']}\n"
+            for g in genes
         )
     )
     return record(
-        paths, source="ensembl", release="GRCh38", url=base, path=out,
+        paths,
+        source="ensembl",
+        release="GRCh38",
+        url=base,
+        path=out,
         method="Ensembl REST lookup/symbol per gene",
-    )  # fmt: skip
+    )
 
 
 def panel_regions(paths: Paths) -> list[dict[str, Any]]:
@@ -281,9 +312,15 @@ def fetch_gnomad(cfg: dict[str, Any], paths: Paths) -> list[dict[str, Any]]:
         _bcftools_region(url, _region(g), keep, dest, paths.raw / "gnomad")
         out.append(
             record(
-                paths, source="gnomad", release=cfg["gnomad"]["release"], url=url, path=dest,
-                method=f"bcftools view -r {_region(g)} | annotate -x ^<{len(keep.split(','))} fields>",
-            )  # fmt: skip
+                paths,
+                source="gnomad",
+                release=cfg["gnomad"]["release"],
+                url=url,
+                path=dest,
+                method=(
+                    f"bcftools view -r {_region(g)} | annotate -x ^<{len(keep.split(','))} fields>"
+                ),
+            )
         )
     return out
 
@@ -319,12 +356,20 @@ def fetch_mavedb(cfg: dict[str, Any], paths: Paths) -> list[dict[str, Any]]:
         curl(f"{api}/score-sets/{urn}", meta, max_time=120)
         curl(f"{api}/score-sets/{urn}/scores", scores, max_time=600)
         licence = json.loads(meta.read_text()).get("license", {}).get("shortName", "unknown")
-        for path, url in ((meta, f"{api}/score-sets/{urn}"), (scores, f"{api}/score-sets/{urn}/scores")):
+        for path, url in (
+            (meta, f"{api}/score-sets/{urn}"),
+            (scores, f"{api}/score-sets/{urn}/scores"),
+        ):
             out.append(
                 record(
-                    paths, source="mavedb", release=urn, url=url, path=path,
-                    method="MaveDB API v1", note=f"licence {licence}",
-                )  # fmt: skip
+                    paths,
+                    source="mavedb",
+                    release=urn,
+                    url=url,
+                    path=path,
+                    method="MaveDB API v1",
+                    note=f"licence {licence}",
+                )
             )
         time.sleep(0.5)
     return out

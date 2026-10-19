@@ -1,0 +1,17 @@
+Sort  (cost=2153.50..2153.51 rows=5 width=12) (actual time=5.569..5.570 rows=5 loops=1)
+  Sort Key: clinsig_class
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=3753
+  ->  HashAggregate  (cost=2153.39..2153.44 rows=5 width=12) (actual time=5.562..5.563 rows=5 loops=1)
+        Group Key: clinsig_class
+        Batches: 1  Memory Usage: 24kB
+        Buffers: shared hit=3753
+        ->  Bitmap Heap Scan on bench_cur  (cost=15.85..2150.48 rows=582 width=4) (actual time=0.834..3.987 rows=15336 loops=1)
+              Recheck Cond: ((chrom = '17'::text) AND (pos >= 43044292) AND (pos <= 43170245))
+              Heap Blocks: exact=3718
+              Buffers: shared hit=3753
+              ->  Bitmap Index Scan on bench_cur_pos  (cost=0.00..15.71 rows=582 width=0) (actual time=0.541..0.541 rows=15336 loops=1)
+                    Index Cond: ((chrom = '17'::text) AND (pos >= 43044292) AND (pos <= 43170245))
+                    Buffers: shared hit=35
+Planning Time: 0.069 ms
+Execution Time: 5.587 ms

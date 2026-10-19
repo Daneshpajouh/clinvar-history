@@ -38,16 +38,14 @@ ZERO_CHECKS: dict[str, str] = {
         "SELECT count(*) FROM submission AS s LEFT JOIN clinvar_variation AS cv"
         " ON s.variation_id = cv.variation_id WHERE cv.variation_id IS NULL"
     ),
-    "variations in the latest release have a current classification": (
-        "SELECT count(*) FROM clinvar_variation AS cv"
-        " INNER JOIN v_clinvar_release AS r ON cv.last_release_id = r.release_id AND r.recency_rank = 1"
-        " LEFT JOIN classification AS c ON c.variation_id = cv.variation_id AND c.is_current"
-        " WHERE c.variation_id IS NULL"
+    "every ClinVar variation has a classification history": (
+        "SELECT count(*) FROM clinvar_variation AS cv LEFT JOIN classification AS c"
+        " ON c.variation_id = cv.variation_id WHERE c.variation_id IS NULL"
     ),
-    "AlleleID unique within the latest release": (
-        "SELECT count(*) FROM (SELECT allele_id FROM clinvar_variation AS cv"
-        " INNER JOIN v_clinvar_release AS r ON cv.last_release_id = r.release_id"
-        " AND r.recency_rank = 1 GROUP BY allele_id HAVING count(*) > 1) AS d"
+    "AlleleID unique among current variations": (
+        "SELECT count(*) FROM (SELECT cv.allele_id FROM clinvar_variation AS cv"
+        " INNER JOIN classification AS c ON c.variation_id = cv.variation_id AND c.is_current"
+        " GROUP BY cv.allele_id HAVING count(*) > 1) AS d"
     ),
     "gnomAD AF agrees with AC/AN (abs diff < 1e-4)": (
         "SELECT count(*) FROM population_frequency WHERE an > 0 AND af IS NOT NULL"
@@ -57,7 +55,9 @@ ZERO_CHECKS: dict[str, str] = {
         "SELECT count(*) FROM population_frequency AS pf LEFT JOIN variant AS v"
         " ON pf.variant_key = v.variant_key WHERE v.variant_key IS NULL"
     ),
-    "score sets carry a licence": "SELECT count(*) FROM score_set WHERE licence IS NULL OR licence = ''",
+    "score sets carry a licence": (
+        "SELECT count(*) FROM score_set WHERE licence IS NULL OR licence = ''"
+    ),
     "functional scores reference a score set": (
         "SELECT count(*) FROM functional_score AS f LEFT JOIN score_set AS s"
         " ON f.score_set_urn = s.urn WHERE s.urn IS NULL"
@@ -69,7 +69,9 @@ ZERO_CHECKS: dict[str, str] = {
         " '2', ''), '3', ''), '4', ''), '5', ''), '6', ''), '7', ''), '8', ''), '9', ''),"
         " 'a', ''), 'b', ''), 'c', ''), 'd', ''), 'e', ''), 'f', '')) > 0"
     ),
-    "releases left in 'loading' state": "SELECT count(*) FROM source_release WHERE status = 'loading'",
+    "releases left in 'loading' state": (
+        "SELECT count(*) FROM source_release WHERE status = 'loading'"
+    ),
 }
 
 
@@ -98,7 +100,9 @@ def run_checks(engine: Engine) -> list[CheckResult]:
         detail = f"staged {staged}, loaded {loaded}"
         if is_sub:
             detail += f"; {staged - loaded} rows name a VariationID absent from variant_summary"
-        results.append(CheckResult(f"row counts {source} {label} {path.split('/')[-1]}", ok, detail))
+        results.append(
+            CheckResult(f"row counts {source} {label} {path.split('/')[-1]}", ok, detail)
+        )
     return results
 
 

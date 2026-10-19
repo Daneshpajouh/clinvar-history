@@ -23,9 +23,21 @@ def _float(value: str | None) -> float | None:
 def parse_vcf(path: Path, groups: list[str]) -> pl.DataFrame:
     """One row per variant and ancestry group ('all' plus each group)."""
     rows: dict[str, list[object]] = {
-        k: [] for k in ("variant_key", "chrom", "pos", "ref", "alt", "ancestry_group",
-                        "ac", "an", "af", "nhomalt", "filter")
-    }  # fmt: skip
+        k: []
+        for k in (
+            "variant_key",
+            "chrom",
+            "pos",
+            "ref",
+            "alt",
+            "ancestry_group",
+            "ac",
+            "an",
+            "af",
+            "nhomalt",
+            "filter",
+        )
+    }
     with gzip.open(path, "rt") as fh:
         for line in fh:
             if line.startswith("#"):
@@ -55,10 +67,18 @@ def parse_vcf(path: Path, groups: list[str]) -> pl.DataFrame:
     return pl.DataFrame(
         rows,
         schema={
-            "variant_key": pl.String, "chrom": pl.String, "pos": pl.Int32, "ref": pl.String,
-            "alt": pl.String, "ancestry_group": pl.String, "ac": pl.Int32, "an": pl.Int32,
-            "af": pl.Float64, "nhomalt": pl.Int32, "filter": pl.String,
-        },  # fmt: skip
+            "variant_key": pl.String,
+            "chrom": pl.String,
+            "pos": pl.Int32,
+            "ref": pl.String,
+            "alt": pl.String,
+            "ancestry_group": pl.String,
+            "ac": pl.Int32,
+            "an": pl.Int32,
+            "af": pl.Float64,
+            "nhomalt": pl.Int32,
+            "filter": pl.String,
+        },
     )
 
 

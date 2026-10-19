@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,20 @@ log = get_logger(__name__)
 StepHook = Callable[[str], None]
 
 
+VARIATION_COLS = [
+    "allele_id",
+    "variant_key",
+    "gene_id",
+    "name",
+    "variant_type",
+    "transcript",
+    "hgvs_c",
+    "protein_change",
+    "hgvs_c_key",
+    "hgvs_p_key",
+]
+
+
 class LoadError(RuntimeError):
     pass
 
@@ -33,13 +48,30 @@ def _noop(_step: str) -> None:
     return None
 
 
+class _StepTimer:
+    """Logs seconds spent since the previous step, then calls the test hook."""
+
+    def __init__(self, hook: StepHook, release: str) -> None:
+        self.hook, self.release, self.t = hook, release, time.monotonic()
+
+    def __call__(self, step: str) -> None:
+        now = time.monotonic()
+        log.info(
+            "step done",
+            extra={"release": self.release, "step": step, "seconds": round(now - self.t, 2)},
+        )
+        self.t = now
+        self.hook(step)
+
+
 def _manifest_rows(paths: Paths, source: str, release: str) -> list[dict[str, Any]]:
     return [r for r in read_manifest(paths) if r["source"] == source and r["release"] == release]
 
 
 def _release_state(engine: Engine, source: str, label: str) -> tuple[int | None, dict[str, str]]:
     _, rows = engine.query(
-        "SELECT release_id FROM source_release WHERE source = ? AND label = ? AND status = 'loaded'",
+        "SELECT release_id FROM source_release WHERE source = ? AND label = ?"
+        " AND status = 'loaded'",
         [source, label],
     )
     if not rows:
@@ -72,7 +104,8 @@ def _new_release(engine: Engine, source: str, label: str, release_date: str | No
         engine.execute("UPDATE source_release SET status = 'loading' WHERE release_id = ?", [old])
         return int(old)
     engine.execute(
-        "INSERT INTO source_release (source, label, release_date, status) VALUES (?, ?, ?, 'loading')",
+        "INSERT INTO source_release (source, label, release_date, status)"
+        " VALUES (?, ?, ?, 'loading')",
         [source, label, release_date],
     )
     return int(
@@ -91,11 +124,22 @@ def _finish_release(
         engine.execute(
             "INSERT INTO provenance (release_id, url, local_path, size_bytes, sha256, fetched_at,"
             " loaded_at, rows_staged, rows_loaded, terms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [rid, f["url"], f["path"], f["size_bytes"], f["sha256"], f["fetched_at"], now,
-             staged, loaded, f["terms"]],
-        )  # fmt: skip
+            [
+                rid,
+                f["url"],
+                f["path"],
+                f["size_bytes"],
+                f["sha256"],
+                f["fetched_at"],
+                now,
+                staged,
+                loaded,
+                f["terms"],
+            ],
+        )
     engine.execute(
-        "UPDATE source_release SET status = 'loaded', loaded_at = ? WHERE release_id = ?", [now, rid]
+        "UPDATE source_release SET status = 'loaded', loaded_at = ? WHERE release_id = ?",
+        [now, rid],
     )
 
 
@@ -125,6 +169,7 @@ def load_clinvar(
     )
     if newer:
         raise LoadError(f"ClinVar {newer} is already loaded; releases must load oldest first")
+    step_hook = _StepTimer(step_hook, release)
     stage_dir = paths.staging / "clinvar" / release
     n_var = engine.stage_parquet("stg_variants", stage_dir / "variants.parquet")
     n_sub = engine.stage_parquet("stg_submissions", stage_dir / "submissions.parquet")
@@ -136,7 +181,8 @@ def load_clinvar(
             "INSERT INTO gene (gene_id, symbol, hgnc_id)"
             " SELECT gene_id, min(gene_symbol), min(hgnc_id) FROM stg_variants"
             " WHERE gene_id IS NOT NULL GROUP BY gene_id"
-            " ON CONFLICT (gene_id) DO UPDATE SET symbol = excluded.symbol, hgnc_id = excluded.hgnc_id"
+            " ON CONFLICT (gene_id) DO UPDATE SET symbol = excluded.symbol,"
+            " hgnc_id = excluded.hgnc_id"
         )
         engine.execute(
             "INSERT INTO variant (variant_key, chrom, pos, ref, alt, variant_class)"
@@ -144,19 +190,23 @@ def load_clinvar(
             " WHERE variant_key IS NOT NULL ON CONFLICT (variant_key) DO NOTHING"
         )
         step_hook("variant")
+        # Update only rows whose attributes changed (4,212 of 3.7 million
+        # between 2025-10 and 2026-10), then insert new variations. An
+        # INSERT ... ON CONFLICT DO UPDATE over all rows ran for more than
+        # five minutes on DuckDB; see docs/performance.md.
+        changed = " OR ".join(f"cv.{c} IS DISTINCT FROM s.{c}" for c in VARIATION_COLS)
         engine.execute(
-            "INSERT INTO clinvar_variation (variation_id, allele_id, variant_key, gene_id, name,"
-            " variant_type, transcript, hgvs_c, protein_change, hgvs_c_key, hgvs_p_key,"
-            " first_release_id, last_release_id)"
-            " SELECT variation_id, allele_id, variant_key, gene_id, name, variant_type, transcript,"
-            " hgvs_c, protein_change, hgvs_c_key, hgvs_p_key, ?, ? FROM stg_variants"
-            " ON CONFLICT (variation_id) DO UPDATE SET allele_id = excluded.allele_id,"
-            " variant_key = excluded.variant_key, gene_id = excluded.gene_id, name = excluded.name,"
-            " variant_type = excluded.variant_type, transcript = excluded.transcript,"
-            " hgvs_c = excluded.hgvs_c, protein_change = excluded.protein_change,"
-            " hgvs_c_key = excluded.hgvs_c_key, hgvs_p_key = excluded.hgvs_p_key,"
-            " last_release_id = excluded.last_release_id",
-            [rid, rid],
+            "UPDATE clinvar_variation AS cv SET "
+            + ", ".join(f"{c} = s.{c}" for c in VARIATION_COLS)
+            + f" FROM stg_variants AS s WHERE cv.variation_id = s.variation_id AND ({changed})"
+        )
+        engine.execute(
+            f"INSERT INTO clinvar_variation (variation_id, {', '.join(VARIATION_COLS)},"
+            " first_release_id) SELECT s.variation_id, "
+            + ", ".join(f"s.{c}" for c in VARIATION_COLS)
+            + ", ? FROM stg_variants AS s WHERE NOT EXISTS ("
+            " SELECT 1 FROM clinvar_variation AS cv WHERE cv.variation_id = s.variation_id)",
+            [rid],
         )
         step_hook("clinvar_variation")
         # SCD type 2: close the current version when the aggregate record
@@ -201,7 +251,9 @@ def load_clinvar(
             [rid],
         )
         step_hook("submission")
-        loaded_sub = int(engine.scalar("SELECT count(*) FROM submission WHERE release_id = ?", [rid]))
+        loaded_sub = int(
+            engine.scalar("SELECT count(*) FROM submission WHERE release_id = ?", [rid])
+        )
         counts = {
             f"variant_summary_{release}.txt.gz": (n_var, n_var),
             f"submission_summary_{release}.txt.gz": (n_sub, loaded_sub),
@@ -209,9 +261,13 @@ def load_clinvar(
         _finish_release(engine, rid, files, counts)
         log.info(
             "clinvar loaded",
-            extra={"release": release, "variations": n_var, "submissions_staged": n_sub,
-                   "submissions_loaded": loaded_sub},
-        )  # fmt: skip
+            extra={
+                "release": release,
+                "variations": n_var,
+                "submissions_staged": n_sub,
+                "submissions_loaded": loaded_sub,
+            },
+        )
 
     _in_transaction(engine, body)
     return True
@@ -219,13 +275,10 @@ def load_clinvar(
 
 def unload_latest_clinvar(engine: Engine) -> str | None:
     """Roll back the most recent ClinVar release, restoring the SCD state before it."""
-    _, rows = engine.query(
-        "SELECT release_id, label FROM v_clinvar_release WHERE recency_rank <= 2 ORDER BY recency_rank"
-    )
+    _, rows = engine.query("SELECT release_id, label FROM v_clinvar_release WHERE recency_rank = 1")
     if not rows:
         return None
     rid, label = int(rows[0][0]), str(rows[0][1])
-    prev = int(rows[1][0]) if len(rows) > 1 else None
 
     def body() -> None:
         engine.execute("DELETE FROM submission WHERE release_id = ?", [rid])
@@ -236,11 +289,6 @@ def unload_latest_clinvar(engine: Engine) -> str | None:
             [rid],
         )
         engine.execute("DELETE FROM clinvar_variation WHERE first_release_id = ?", [rid])
-        if prev is not None:
-            engine.execute(
-                "UPDATE clinvar_variation SET last_release_id = ? WHERE last_release_id = ?",
-                [prev, rid],
-            )
         # variant rows stay: they are allele keys, not release data, and DuckDB
         # rejects deleting a parent row in the transaction that deleted its child.
         engine.execute("DELETE FROM provenance WHERE release_id = ?", [rid])
@@ -264,7 +312,13 @@ def load_panel(engine: Engine, paths: Paths) -> int:
             engine.execute(
                 "UPDATE gene SET in_panel = TRUE, ensembl_id = ?, chrom = ?, start_pos = ?,"
                 " end_pos = ? WHERE symbol = ?",
-                [g["ensembl_id"], g["chrom"].removeprefix("chr"), g["start"], g["end"], g["symbol"]],
+                [
+                    g["ensembl_id"],
+                    g["chrom"].removeprefix("chr"),
+                    g["start"],
+                    g["end"],
+                    g["symbol"],
+                ],
             )
 
     _in_transaction(engine, body)

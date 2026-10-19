@@ -41,9 +41,7 @@ def match_keys(scores: pl.DataFrame, gene: str, level: str) -> pl.Expr:
     """
     if level == "nucleotide":
         parts = pl.col("hgvs_nt").str.extract_groups(r"^(?<tx>N[MR]_\d+)\.\d+:(?<c>c\..+)$")
-        return pl.concat_str(
-            [parts.struct.field("tx"), parts.struct.field("c")], separator=":"
-        )
+        return pl.concat_str([parts.struct.field("tx"), parts.struct.field("c")], separator=":")
     return (
         pl.when(pl.col("hgvs_pro").str.contains(PROTEIN_SUB_RE))
         .then(pl.lit(f"{gene}:") + pl.col("hgvs_pro"))

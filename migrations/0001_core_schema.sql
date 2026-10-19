@@ -79,8 +79,9 @@ CREATE TABLE clinvar_variation (
     protein_change TEXT,
     hgvs_c_key TEXT,
     hgvs_p_key TEXT,
-    first_release_id INTEGER NOT NULL REFERENCES source_release (release_id),
-    last_release_id INTEGER NOT NULL REFERENCES source_release (release_id)
+    -- Presence in later releases is read from classification, so a release
+    -- load rewrites only the rows whose attributes changed.
+    first_release_id INTEGER NOT NULL REFERENCES source_release (release_id)
 );
 
 CREATE TABLE classification (

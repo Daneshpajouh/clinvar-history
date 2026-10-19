@@ -1,0 +1,6 @@
+duckdb 1.5.6 threads 6 arm64
+clinvar_variation rows before: 3708788
+staged 2026-10 rows: 4575785
+existing rows with changed attributes: 4212
+update changed rows: 0.92 s; insert new rows: 2.38 s; total 3.30 s
+clinvar_variation rows after: 4584619

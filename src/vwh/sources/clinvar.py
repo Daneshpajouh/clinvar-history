@@ -90,10 +90,14 @@ def stage_variants(path: Path, assembly: str = "GRCh38") -> pl.DataFrame:
         pl.when(has_vcf)
         .then(
             pl.concat_str(
-                [pl.col("Chromosome"), pl.col("PositionVCF"),
-                 pl.col("ReferenceAlleleVCF"), pl.col("AlternateAlleleVCF")],
+                [
+                    pl.col("Chromosome"),
+                    pl.col("PositionVCF"),
+                    pl.col("ReferenceAlleleVCF"),
+                    pl.col("AlternateAlleleVCF"),
+                ],
                 separator="-",
-            )  # fmt: skip
+            )
         )
         .alias("variant_key"),
         pl.when(has_vcf).then(pl.col("Chromosome")).alias("chrom"),
@@ -120,8 +124,11 @@ def stage_variants(path: Path, assembly: str = "GRCh38") -> pl.DataFrame:
         .then(variant_class(pl.col("ref"), pl.col("alt")))
         .alias("variant_class"),
         pl.when(pl.col("hgvs_c").is_not_null())
-        .then(pl.concat_str([pl.col("transcript").str.replace(r"\.\d+$", ""), pl.col("hgvs_c")],
-                            separator=":"))
+        .then(
+            pl.concat_str(
+                [pl.col("transcript").str.replace(r"\.\d+$", ""), pl.col("hgvs_c")], separator=":"
+            )
+        )
         .alias("hgvs_c_key"),
         pl.when(pl.col("protein_change").str.contains(PROTEIN_SUB_RE))
         .then(pl.concat_str([pl.col("name_gene"), pl.col("protein_change")], separator=":"))
@@ -142,9 +149,13 @@ def read_submission_summary(path: Path) -> pl.DataFrame:
                 break
             skip += 1
     df = pl.read_csv(
-        path, separator="\t", quote_char=None, infer_schema=False,
-        skip_rows=skip, null_values=["-", "na"],
-    )  # fmt: skip
+        path,
+        separator="\t",
+        quote_char=None,
+        infer_schema=False,
+        skip_rows=skip,
+        null_values=["-", "na"],
+    )
     return df.rename({"#VariationID": "VariationID"})
 
 
@@ -173,7 +184,11 @@ def stage_submissions(path: Path) -> pl.DataFrame:
     deduped = out.unique(subset=["scv"], keep="first", maintain_order=True)
     log.info(
         "staged clinvar submissions",
-        extra={"file": path.name, "rows": deduped.height, "repeated_scv_rows_dropped": out.height - deduped.height},
+        extra={
+            "file": path.name,
+            "rows": deduped.height,
+            "repeated_scv_rows_dropped": out.height - deduped.height,
+        },
     )
     return deduped
 

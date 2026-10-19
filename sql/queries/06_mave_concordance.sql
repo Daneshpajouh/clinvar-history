@@ -19,8 +19,9 @@ WITH matched AS (
     FROM functional_score AS fs
     INNER JOIN score_set AS ss ON fs.score_set_urn = ss.urn
     INNER JOIN clinvar_variation AS cv
-        ON (ss.match_level = 'nucleotide' AND fs.match_key = cv.hgvs_c_key)
-        OR (ss.match_level = 'protein' AND fs.match_key = cv.hgvs_p_key)
+        ON
+            (ss.match_level = 'nucleotide' AND fs.match_key = cv.hgvs_c_key)
+            OR (ss.match_level = 'protein' AND fs.match_key = cv.hgvs_p_key)
     INNER JOIN v_variant_current AS v ON cv.variation_id = v.variation_id
     WHERE
         fs.score IS NOT NULL

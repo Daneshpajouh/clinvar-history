@@ -72,9 +72,7 @@ class DuckDBEngine(Engine):
 
     def stage_parquet(self, table: str, path: Path) -> int:
         self.con.execute(f"DROP TABLE IF EXISTS {table}")
-        self.con.execute(
-            f"CREATE TEMP TABLE {table} AS SELECT * FROM read_parquet(?)", [str(path)]
-        )
+        self.con.execute(f"CREATE TEMP TABLE {table} AS SELECT * FROM read_parquet(?)", [str(path)])
         return int(self.scalar(f"SELECT count(*) FROM {table}"))
 
     def close(self) -> None:
@@ -82,10 +80,17 @@ class DuckDBEngine(Engine):
 
 
 _PG_TYPES = {
-    "int8": "BIGINT", "int16": "SMALLINT", "int32": "INTEGER", "int64": "BIGINT",
-    "double": "DOUBLE PRECISION", "float": "REAL", "bool": "BOOLEAN",
-    "date32[day]": "DATE", "string": "TEXT", "large_string": "TEXT",
-}  # fmt: skip
+    "int8": "BIGINT",
+    "int16": "SMALLINT",
+    "int32": "INTEGER",
+    "int64": "BIGINT",
+    "double": "DOUBLE PRECISION",
+    "float": "REAL",
+    "bool": "BOOLEAN",
+    "date32[day]": "DATE",
+    "string": "TEXT",
+    "large_string": "TEXT",
+}
 
 
 class PostgresEngine(Engine):
@@ -128,9 +133,10 @@ class PostgresEngine(Engine):
         buf = io.BytesIO()
         pacsv.write_csv(tbl, buf, pacsv.WriteOptions(include_header=False))
         buf.seek(0)
-        with self.con.cursor() as cur, cur.copy(
-            f"COPY {table} FROM STDIN WITH (FORMAT csv, NULL '')"
-        ) as copy:
+        with (
+            self.con.cursor() as cur,
+            cur.copy(f"COPY {table} FROM STDIN WITH (FORMAT csv, NULL '')") as copy,
+        ):
             while chunk := buf.read(1 << 20):
                 copy.write(chunk)
         return int(self.scalar(f"SELECT count(*) FROM {table}"))
@@ -166,7 +172,7 @@ def migrate(engine: Engine) -> list[str]:
         " applied_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT current_timestamp)"
     )
     _, rows = engine.query("SELECT filename, sha256 FROM schema_migrations")
-    applied = dict(rows)
+    applied: dict[str, str] = {str(f): str(h) for f, h in rows}
     done = []
     for path in migration_files(engine.name):
         text = path.read_text()
@@ -181,7 +187,8 @@ def migrate(engine: Engine) -> list[str]:
         try:
             engine.execute(text)
             engine.execute(
-                "INSERT INTO schema_migrations (filename, sha256) VALUES (?, ?)", [path.name, digest]
+                "INSERT INTO schema_migrations (filename, sha256) VALUES (?, ?)",
+                [path.name, digest],
             )
             engine.commit()
         except Exception:

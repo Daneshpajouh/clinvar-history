@@ -12,9 +12,14 @@ from vwh.db import Engine, migrate
 from vwh.validate import run_checks
 
 TABLES = [
-    "source_release", "provenance", "gene", "clinvar_variation", "classification",
-    "submitter", "submission",
-]  # fmt: skip
+    "source_release",
+    "provenance",
+    "gene",
+    "clinvar_variation",
+    "classification",
+    "submitter",
+    "submission",
+]
 
 
 def snapshot(engine: Engine) -> dict[str, Any]:
@@ -28,15 +33,25 @@ def snapshot(engine: Engine) -> dict[str, Any]:
 
 
 def test_counts_after_two_releases(loaded_engine: Engine) -> None:
-    assert loaded_engine.scalar("SELECT count(*) FROM clinvar_variation") == 9
-    # 7 versions from 2025-10, then V1 and V4 changed and V8, V9 arrived.
-    assert loaded_engine.scalar("SELECT count(*) FROM classification") == 11
-    assert loaded_engine.scalar("SELECT count(*) FROM classification WHERE is_current") == 8
+    assert loaded_engine.scalar("SELECT count(*) FROM clinvar_variation") == 10
+    # 7 versions from 2025-10, then V1 and V4 changed and V8, V9, V10 arrived.
+    assert loaded_engine.scalar("SELECT count(*) FROM classification") == 12
+    assert loaded_engine.scalar("SELECT count(*) FROM classification WHERE is_current") == 9
+    # V6 left ClinVar: its only version is closed by the 2026-10 release.
+    assert (
+        loaded_engine.scalar(
+            "SELECT count(*) FROM classification WHERE variation_id = 1006 AND is_current"
+        )
+        == 0
+    )
     # 15 rows: one repeated SCV dropped at staging, one orphan VariationID dropped at load.
-    assert loaded_engine.scalar(
-        "SELECT count(*) FROM submission AS s INNER JOIN v_clinvar_release AS r"
-        " ON s.release_id = r.release_id AND r.recency_rank = 1"
-    ) == 13
+    assert (
+        loaded_engine.scalar(
+            "SELECT count(*) FROM submission AS s INNER JOIN v_clinvar_release AS r"
+            " ON s.release_id = r.release_id AND r.recency_rank = 1"
+        )
+        == 13
+    )
 
 
 def test_validation_passes(loaded_engine: Engine) -> None:
@@ -59,8 +74,10 @@ def test_releases_load_oldest_first(empty_engine: Engine, fixture_paths: Paths) 
         load.load_clinvar(empty_engine, fixture_paths, "2025-10")
 
 
-@pytest.mark.parametrize("step", ["release", "clinvar_variation", "classification_close",
-                                  "classification_open", "submission"])
+@pytest.mark.parametrize(
+    "step",
+    ["release", "clinvar_variation", "classification_close", "classification_open", "submission"],
+)
 def test_drill_interrupted_refresh_rolls_back(
     empty_engine: Engine, fixture_paths: Paths, step: str
 ) -> None:
@@ -76,9 +93,15 @@ def test_drill_interrupted_refresh_rolls_back(
     with pytest.raises(RuntimeError, match="simulated failure"):
         load.load_clinvar(empty_engine, fixture_paths, "2026-10", step_hook=crash)
     assert snapshot(empty_engine) == before
+    # The previous release is still the one analysts see.
+    assert (
+        empty_engine.scalar("SELECT label FROM v_clinvar_release WHERE recency_rank = 1")
+        == "2025-10"
+    )
+    assert empty_engine.scalar("SELECT count(*) FROM v_variant_current") == 7
     # The retry starts from a clean state and completes.
     assert load.load_clinvar(empty_engine, fixture_paths, "2026-10") is True
-    assert empty_engine.scalar("SELECT count(*) FROM classification WHERE is_current") == 8
+    assert empty_engine.scalar("SELECT count(*) FROM classification WHERE is_current") == 9
 
 
 def test_unload_restores_previous_release(empty_engine: Engine, fixture_paths: Paths) -> None:
@@ -94,9 +117,10 @@ def test_unload_restores_previous_release(empty_engine: Engine, fixture_paths: P
         after.pop(key)
         before.pop(key)
     assert after == before
-    assert empty_engine.scalar(
-        "SELECT status FROM source_release WHERE label = '2026-10'"
-    ) == "rolled_back"
+    assert (
+        empty_engine.scalar("SELECT status FROM source_release WHERE label = '2026-10'")
+        == "rolled_back"
+    )
     # Loading the same release again reuses the audit row and succeeds.
     assert load.load_clinvar(empty_engine, fixture_paths, "2026-10") is True
 
