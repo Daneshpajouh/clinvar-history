@@ -1,9 +1,19 @@
--- Current pathogenic or likely pathogenic panel variants and their gnomAD v4.1
--- joint frequency in each genetic ancestry group. The join is an exact match
--- on the GRCh38 key chrom-pos-ref-alt; both ClinVar and gnomAD publish
--- left-aligned VCF alleles on GRCh38, so no liftover or normalisation step
--- sits between them. "rare" means 0 < AF < 0.001.
-WITH plp AS (
+-- Current pathogenic or likely pathogenic panel variants and their gnomAD
+-- joint frequency in each genetic ancestry group, from the latest loaded
+-- gnomAD release. The join is an exact match on the GRCh38 key
+-- chrom-pos-ref-alt; ClinVar and gnomAD both publish left-aligned VCF alleles
+-- on GRCh38, so no liftover or normalisation step sits between them.
+-- Only gnomAD sites with FILTER = PASS count, and a group needs AN >= 1000
+-- (500 people) before its frequency is used. "rare" means 0 < AF < 0.001.
+WITH gnomad_latest AS (
+    SELECT release_id
+    FROM source_release
+    WHERE source = 'gnomad' AND status = 'loaded'
+    ORDER BY label DESC
+    LIMIT 1
+),
+
+plp AS (
     SELECT variant_key
     FROM v_variant_current
     WHERE in_panel AND clinsig_class = 'P/LP' AND variant_key IS NOT NULL
@@ -16,8 +26,8 @@ freq AS (
         pf.ac,
         pf.af
     FROM population_frequency AS pf
-    INNER JOIN source_release AS r
-        ON pf.release_id = r.release_id AND r.source = 'gnomad'
+    INNER JOIN gnomad_latest AS g ON pf.release_id = g.release_id
+    WHERE pf.filter = 'PASS' AND pf.an >= 1000
 )
 
 SELECT

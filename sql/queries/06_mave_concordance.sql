@@ -2,9 +2,14 @@
 --
 -- Joins: nucleotide score sets match clinvar_variation.hgvs_c_key (same
 -- transcript, version ignored, same c. change). Protein score sets match
--- hgvs_p_key (gene plus single amino acid change); several nucleotide changes
--- can give one protein change, so a protein change is labelled only when every
--- matched ClinVar variation with at least one star agrees on P/LP or B/LB.
+-- hgvs_p_key (gene plus single amino acid change); several nucleotide
+-- changes can give one protein change.
+--
+-- Labels: only current ClinVar records with at least one star and class P/LP
+-- or B/LB are used; VUS and conflicting records are set aside first. A score
+-- key is labelled when all remaining matched records agree, and dropped when
+-- they disagree. A key that occurs more than once in a score set gets the
+-- mean of its scores.
 --
 -- auc_plp_lower is the Mann-Whitney estimate of P(score of a P/LP variant <
 -- score of a B/LB variant), ties counted as one half. 0.5 means no separation.
@@ -33,7 +38,7 @@ labelled AS (
     SELECT
         score_set_urn,
         match_key,
-        min(score) AS score,
+        avg(score) AS score,
         min(clinsig_class) AS clinsig_class
     FROM matched
     GROUP BY score_set_urn, match_key

@@ -7,7 +7,10 @@ from typing import Any
 import pytest
 
 from vwh import queries
+from vwh.config import Paths
 from vwh.db import Engine
+
+from .conftest import load_all
 
 
 def rows(engine: Engine, name: str) -> list[tuple[Any, ...]]:
@@ -61,9 +64,11 @@ def test_plp_common_in_a_group(loaded_engine: Engine) -> None:
 
 def test_mave_concordance(loaded_engine: Engine) -> None:
     # BRCA1 has no B/LB match with a star, so only TP53 is reported.
-    # Ranks -3, -1 (P/LP) and 0.8, 1.0 (B/LB): every P/LP score is lower, AUC 1.
+    # p.Arg175His is scored twice (-3.0, -2.0) and counts once at the mean,
+    # -2.5. P/LP -2.5, -1.0 against B/LB 0.8, 1.0: every P/LP score is lower,
+    # AUC 1; median P/LP (-2.5 + -1.0) / 2.
     assert rows(loaded_engine, "06") == [
-        ("TP53", "urn:mavedb:00000068-0-1", "protein", 2, 2, -2.0, 0.9, 1.0),
+        ("TP53", "urn:mavedb:00000068-0-1", "protein", 2, 2, -1.75, 0.9, 1.0),
     ]
 
 
@@ -92,3 +97,21 @@ def test_graphkb_style_snvs(loaded_engine: Engine) -> None:
 def test_resolve_rejects_ambiguous_name() -> None:
     with pytest.raises(FileNotFoundError):
         queries.resolve("0")
+
+
+def test_frequency_queries_read_only_the_latest_gnomad_release(
+    empty_engine: Engine, fixture_paths: Paths
+) -> None:
+    load_all(empty_engine, fixture_paths)
+    # An older release in which V1 looked common in afr must not change the answer.
+    empty_engine.execute(
+        "INSERT INTO source_release (source, label, status) VALUES ('gnomad', '4.0', 'loaded')"
+    )
+    old = empty_engine.scalar("SELECT release_id FROM source_release WHERE label = '4.0'")
+    empty_engine.execute(
+        "INSERT INTO population_frequency (variant_key, release_id, ancestry_group, ac, an, af,"
+        " nhomalt, filter) VALUES ('17-43045712-G-A', ?, 'afr', 1000, 2000, 0.5, 0, 'PASS')",
+        [old],
+    )
+    assert [r[4:6] for r in rows(empty_engine, "05")] == [("afr", 0.002)]
+    assert rows(empty_engine, "04")[0] == ("afr", 4, 1, 0, 1)

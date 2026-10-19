@@ -3,3 +3,4 @@
 chr17	43045712	.	G	A	.	PASS	AC_joint=5;AN_joint=10000;AF_joint=0.0005;nhomalt_joint=0;AC_joint_afr=4;AN_joint_afr=2000;AF_joint_afr=0.002;nhomalt_joint_afr=0;AC_joint_nfe=1;AN_joint_nfe=6000;AF_joint_nfe=0.000166667;nhomalt_joint_nfe=0
 chr17	7675088	.	C	T	.	PASS	AC_joint=1;AN_joint=10000;AF_joint=0.0001;nhomalt_joint=0;AC_joint_afr=0;AN_joint_afr=2000;AF_joint_afr=0.0;nhomalt_joint_afr=0;AC_joint_nfe=1;AN_joint_nfe=6000;AF_joint_nfe=0.000166667;nhomalt_joint_nfe=0
 chr17	7676154	.	G	C	.	PASS	AC_joint=3000;AN_joint=10000;AF_joint=0.3;nhomalt_joint=0;AC_joint_afr=600;AN_joint_afr=2000;AF_joint_afr=0.3;nhomalt_joint_afr=0;AC_joint_nfe=1800;AN_joint_nfe=6000;AF_joint_nfe=0.3;nhomalt_joint_nfe=0
+chr17	43045713	.	C	T	.	EXOMES_FILTERED	AC_joint=40;AN_joint=10000;AF_joint=0.004;nhomalt_joint=0;AC_joint_afr=20;AN_joint_afr=2000;AF_joint_afr=0.01;nhomalt_joint_afr=0;AC_joint_nfe=20;AN_joint_nfe=6000;AF_joint_nfe=0.00333333;nhomalt_joint_nfe=0
