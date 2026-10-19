@@ -255,12 +255,15 @@ def bench(
     out: Annotated[Path, typer.Option(help="CSV with one row per timed case")] = Path(
         "bench/results/latest.csv"
     ),
+    plans: Annotated[Path, typer.Option(help="Folder for EXPLAIN ANALYZE output")] = Path(
+        "bench/plans"
+    ),
 ) -> None:
     """Time the benchmark cases on DuckDB, SQLite and (with --dsn) PostgreSQL."""
     from vwh import bench as bm
 
     paths = data_paths(data_dir)
-    rows = bm.run_all(paths, dsn=dsn, repeats=repeats)
+    rows = bm.run_all(paths, dsn=dsn, repeats=repeats, plans=plans)
     bm.write_csv(rows, out)
     typer.echo(json.dumps(bm.machine_info(), indent=1))
 

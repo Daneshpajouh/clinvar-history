@@ -153,14 +153,26 @@ def bench_duckdb_files(files: dict[str, Path], key: str, n: int, repeats: int) -
     return out
 
 
-def explain_duckdb(files: dict[str, Path], plans: Path) -> None:
+def explain_duckdb(data_dir: Path, files: dict[str, Path], plans: Path) -> None:
+    """Save EXPLAIN ANALYZE output with file paths relative to the data directory.
+
+    Plans are committed to the repository, so they must not carry the path of
+    the machine that produced them.
+    """
     con = duckdb.connect()
     con.execute("SET threads = 6")
+    con.execute(f"SET file_search_path = '{data_dir}'")
     for layout in ("parquet_unsorted", "parquet_sorted"):
-        sql = QUERIES["region_count"].format(t=f"read_parquet('{files[layout]}')", key="")
+        rel = files[layout].relative_to(data_dir)
+        sql = QUERIES["region_count"].format(t=f"read_parquet('{rel}')", key="")
         rows = con.execute(f"EXPLAIN ANALYZE {sql}").fetchall()
-        (plans / f"duckdb_region_count_{layout}.txt").write_text(rows[0][1] + "\n")
+        text = normalise_paths(rows[0][1], data_dir)
+        (plans / f"duckdb_region_count_{layout}.txt").write_text(text + "\n")
     con.close()
+
+
+def normalise_paths(text: str, data_dir: Path) -> str:
+    return text.replace(str(data_dir.resolve()), "$DATA_DIR").replace(str(data_dir), "$DATA_DIR")
 
 
 def bench_sqlite(files: dict[str, Path], key: str, n: int, repeats: int, work: Path) -> list[Row]:
@@ -243,9 +255,8 @@ def bench_postgres(
     return out
 
 
-def run_all(paths: Paths, dsn: str | None, repeats: int) -> list[Row]:
+def run_all(paths: Paths, dsn: str | None, repeats: int, plans: Path) -> list[Row]:
     work = paths.data_dir / "bench"
-    plans = Path("bench/plans")
     plans.mkdir(parents=True, exist_ok=True)
     files = export_inputs(paths, work)
     con = duckdb.connect()
@@ -262,7 +273,7 @@ def run_all(paths: Paths, dsn: str | None, repeats: int) -> list[Row]:
     sizes = {k: v.stat().st_size for k, v in files.items()}
     log.info("bench inputs", extra={"rows": n, "lookup_key": key, **sizes})
     rows = bench_duckdb_files(files, key, n, repeats)
-    explain_duckdb(files, plans)
+    explain_duckdb(paths.data_dir, files, plans)
     rows += bench_sqlite(files, key, n, repeats, work)
     if dsn:
         rows += bench_postgres(dsn, files, key, n, repeats, plans)

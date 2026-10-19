@@ -3,7 +3,7 @@
 ││    Query Profiling Information    ││
 │└───────────────────────────────────┘│
 └─────────────────────────────────────┘
-EXPLAIN ANALYZE SELECT clinsig_class, count(*) FROM read_parquet('/Volumes/MXFAST/data/portfolio/variant-warehouse-run/bench/current_sorted.parquet') WHERE chrom = '17' AND pos BETWEEN 43044292 AND 43170245 GROUP BY clinsig_class ORDER BY clinsig_class
+EXPLAIN ANALYZE SELECT clinsig_class, count(*) FROM read_parquet('$DATA_DIR/bench/current_sorted.parquet') WHERE chrom = '17' AND pos BETWEEN 43044292 AND 43170245 GROUP BY clinsig_class ORDER BY clinsig_class
 ┌────────────────────────────────────────────────┐
 │┌──────────────────────────────────────────────┐│
 ││              Total Time: 0.0018s             ││
@@ -70,10 +70,9 @@ EXPLAIN ANALYZE SELECT clinsig_class, count(*) FROM read_parquet('/Volumes/MXFAS
 │    Total Files Read: 1    │
 │                           │
 │        Filename(s):       │
-│    /Volumes/MXFAST/data   │
-│     /portfolio/variant    │
-│    -warehouse-run/bench   │
-│  /current_sorted.parquet  │
+│      $DATA_DIR/bench      │
+│      /current_sorted      │
+│          .parquet         │
 │                           │
 │                           │
 │                           │
