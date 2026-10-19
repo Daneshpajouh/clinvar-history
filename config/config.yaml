@@ -1,0 +1,53 @@
+# Sources and selections for one warehouse build.
+# Paths are relative to the data directory (VWH_DATA_DIR, default ./data).
+
+clinvar:
+  # Monthly releases from the archive folder. The main-folder files are
+  # overwritten every week, so pinned monthly names keep loads reproducible.
+  base_url: ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive
+  releases: ["2025-10", "2026-10"]
+  assembly: GRCh38
+
+panel:
+  # Hereditary cancer genes with public multiplexed functional data.
+  genes: [BRCA1, BRCA2, TP53, PTEN, MSH2, MLH1, MSH6, PMS2, PALB2, CHEK2]
+  ensembl_lookup_url: https://rest.ensembl.org/lookup/symbol/homo_sapiens
+  flank_bp: 0
+
+gnomad:
+  release: "4.1"
+  dataset: joint
+  url_template: https://storage.googleapis.com/gcp-public-data--gnomad/release/4.1/vcf/joint/gnomad.joint.v4.1.sites.chr{chrom}.vcf.bgz
+  ancestry_groups: [afr, ami, amr, asj, eas, fin, mid, nfe, sas, remaining]
+
+mavedb:
+  api: https://api.mavedb.org/api/v1
+  # match_level: nucleotide joins on transcript c. notation, protein on p. notation.
+  score_sets:
+    - {urn: "urn:mavedb:00000097-0-2", gene: BRCA1, match_level: nucleotide}
+    - {urn: "urn:mavedb:00001279-a-1", gene: BRCA2, match_level: nucleotide}
+    - {urn: "urn:mavedb:00001259-a-2", gene: PALB2, match_level: nucleotide}
+    - {urn: "urn:mavedb:00000068-0-1", gene: TP53, match_level: protein}
+    - {urn: "urn:mavedb:00000054-a-1", gene: PTEN, match_level: protein}
+    - {urn: "urn:mavedb:00000013-a-1", gene: PTEN, match_level: protein}
+    - {urn: "urn:mavedb:00000050-a-1", gene: MSH2, match_level: protein}
+    - {urn: "urn:mavedb:00001205-a-1", gene: CHEK2, match_level: protein}
+
+encode:
+  # Collection endpoint; the portal's robots.txt disallows /search/ and limit=all.
+  url: https://www.encodeproject.org/experiments/
+  assay_title: TF ChIP-seq
+  biosamples: [K562, HepG2]
+  page_size: 1000
+
+hprc:
+  release: "1.1"
+  url: https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/freeze/freeze1/minigraph-cactus/hprc-v1.1-mc-grch38/hprc-v1.1-mc-grch38.vcfbub.a100k.wave.vcf.gz
+
+reference:
+  fasta_url_template: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/chromosomes/chr{chrom}.fa.gz
+  chain_url: https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHs1.over.chain.gz
+  chain_target: T2T-CHM13v2.0
+
+thresholds:
+  rare_af: 0.001

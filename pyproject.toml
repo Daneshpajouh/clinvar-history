@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "variant-warehouse"
+version = "1.0.0"
+description = "SQL-first variant knowledge warehouse for ClinVar, gnomAD, MaveDB, ENCODE and HPRC data on DuckDB and PostgreSQL"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Amir Daneshpajouh" }]
+requires-python = ">=3.11"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
+  "Topic :: Database",
+]
+dependencies = [
+  "duckdb>=1.2",
+  "polars>=1.20",
+  "pyarrow>=16",
+  "typer>=0.12",
+  "rich>=13",
+  "pyyaml>=6",
+  "jsonschema>=4.20",
+  "pyliftover>=0.4",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1"]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "sqlfluff>=3",
+  "types-PyYAML",
+  "types-jsonschema",
+  "pre-commit>=3",
+]
+workflow = ["snakemake>=8", "snakefmt>=0.10"]
+docs = ["mkdocs>=1.6", "mkdocs-material>=9.5"]
+
+[project.scripts]
+vwh = "vwh.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vwh = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "RUF", "PL", "PT"]
+ignore = ["PLR0913", "PLR2004", "PLR0911", "PLR0912", "PLR0915"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["PLR2004", "S101"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["vwh"]
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["pyliftover.*", "psycopg.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "postgres: needs a PostgreSQL server named by VWH_PG_DSN",
+]

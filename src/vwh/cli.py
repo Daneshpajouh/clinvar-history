@@ -1,0 +1,202 @@
+"""Command line entry point: vwh fetch | stage | load | validate | query | bench | export."""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+from typing import Annotated
+
+import typer
+
+from vwh import __version__
+from vwh.config import data_paths, load_config
+from vwh.db import Engine, connect, migrate
+from vwh.logs import get_logger, setup_logging
+
+app = typer.Typer(add_completion=False, no_args_is_help=True, help=__doc__)
+log = get_logger("vwh")
+
+ConfigOpt = Annotated[Path | None, typer.Option("--config", help="YAML build config")]
+DataDirOpt = Annotated[
+    Path | None, typer.Option("--data-dir", help="Data directory (default VWH_DATA_DIR or ./data)")
+]
+DsnOpt = Annotated[
+    str | None,
+    typer.Option("--dsn", help="PostgreSQL DSN; omit to use the DuckDB file in the data directory"),
+]
+
+SOURCES = ["genes", "clinvar", "gnomad", "mavedb"]
+
+
+@app.callback()
+def main(
+    log_level: Annotated[str, typer.Option(help="DEBUG, INFO, WARNING")] = "INFO",
+    log_file: Annotated[str | None, typer.Option(help="Also write JSON log lines here")] = None,
+) -> None:
+    setup_logging(log_level, log_file)
+
+
+@app.command()
+def version() -> None:
+    """Print the package version."""
+    typer.echo(__version__)
+
+
+@app.command()
+def fetch(
+    source: Annotated[str, typer.Argument(help=f"One of: {', '.join(SOURCES)}")],
+    release: Annotated[str | None, typer.Option(help="ClinVar release, YYYY-MM")] = None,
+    config: ConfigOpt = None,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Download one source into <data_dir>/raw and append to the manifest."""
+    from vwh import fetch as f
+
+    cfg = load_config(config)
+    paths = data_paths(data_dir)
+    if source == "clinvar":
+        releases = [release] if release else cfg["clinvar"]["releases"]
+        for rel in releases:
+            f.fetch_clinvar(cfg, paths, rel)
+    elif source == "genes":
+        f.fetch_genes(cfg, paths)
+    elif source == "gnomad":
+        f.fetch_gnomad(cfg, paths)
+    elif source == "mavedb":
+        f.fetch_mavedb(cfg, paths)
+    else:
+        raise typer.BadParameter(f"unknown source {source!r}")
+
+
+def _engine(dsn: str | None, data_dir: Path | None) -> Engine:
+    paths = data_paths(data_dir)
+    return connect(dsn=dsn, duckdb_path=paths.duckdb_path)
+
+
+@app.command()
+def stage(
+    source: Annotated[str, typer.Argument(help="clinvar, gnomad or mavedb")],
+    release: Annotated[str | None, typer.Option(help="ClinVar release, YYYY-MM")] = None,
+    config: ConfigOpt = None,
+    data_dir: DataDirOpt = None,
+) -> None:
+    """Parse raw files into typed Parquet under <data_dir>/staging."""
+    from vwh.sources import clinvar, gnomad, mavedb
+
+    cfg = load_config(config)
+    paths = data_paths(data_dir)
+    if source == "clinvar":
+        for rel in [release] if release else cfg["clinvar"]["releases"]:
+            clinvar.stage_release(paths.raw / "clinvar", paths.staging, rel)
+    elif source == "gnomad":
+        gnomad.stage(
+            paths.raw / "gnomad", paths.staging, cfg["gnomad"]["ancestry_groups"],
+            cfg["gnomad"]["release"],
+        )  # fmt: skip
+    elif source == "mavedb":
+        mavedb.stage(paths.raw / "mavedb", paths.staging, cfg["mavedb"]["score_sets"])
+    else:
+        raise typer.BadParameter(f"unknown source {source!r}")
+
+
+@app.command()
+def load(
+    source: Annotated[str, typer.Argument(help="all, clinvar, gnomad or mavedb")] = "all",
+    release: Annotated[str | None, typer.Option(help="ClinVar release, YYYY-MM")] = None,
+    config: ConfigOpt = None,
+    data_dir: DataDirOpt = None,
+    dsn: DsnOpt = None,
+) -> None:
+    """Apply migrations, then load staged data. Re-running with the same files is a no-op."""
+    from vwh import load as ld
+
+    cfg = load_config(config)
+    paths = data_paths(data_dir)
+    engine = _engine(dsn, data_dir)
+    migrate(engine)
+    if source in ("all", "clinvar"):
+        for rel in [release] if release else sorted(cfg["clinvar"]["releases"]):
+            ld.load_clinvar(engine, paths, rel)
+        ld.load_panel(engine, paths)
+    if source in ("all", "gnomad"):
+        ld.load_gnomad(engine, paths, cfg["gnomad"]["release"])
+    if source in ("all", "mavedb"):
+        ld.load_mavedb(engine, paths)
+    engine.close()
+
+
+@app.command()
+def unload(
+    source: Annotated[str, typer.Argument(help="clinvar")] = "clinvar",
+    data_dir: DataDirOpt = None,
+    dsn: DsnOpt = None,
+) -> None:
+    """Roll back the most recent ClinVar release in one transaction."""
+    from vwh import load as ld
+
+    if source != "clinvar":
+        raise typer.BadParameter("only the latest ClinVar release can be unloaded")
+    engine = _engine(dsn, data_dir)
+    label = ld.unload_latest_clinvar(engine)
+    typer.echo(f"unloaded clinvar {label}" if label else "nothing to unload")
+    engine.close()
+
+
+@app.command()
+def validate(
+    data_dir: DataDirOpt = None,
+    dsn: DsnOpt = None,
+    report: Annotated[Path | None, typer.Option(help="Write a Markdown report here")] = None,
+) -> None:
+    """Run the validation checks; exit 1 if any check fails."""
+    from vwh import validate as val
+
+    engine = _engine(dsn, data_dir)
+    results = val.run_checks(engine)
+    engine.close()
+    for r in results:
+        typer.echo(f"{'PASS' if r.passed else 'FAIL'}  {r.name}: {r.detail}")
+    if report:
+        report.write_text(val.to_markdown(results, engine_name=engine.name))
+    if not all(r.passed for r in results):
+        raise typer.Exit(1)
+
+
+@app.command()
+def query(
+    name: Annotated[str, typer.Argument(help="File stem in sql/queries, or a path to a .sql file")],
+    data_dir: DataDirOpt = None,
+    dsn: DsnOpt = None,
+    fmt: Annotated[str, typer.Option("--format", help="table, csv or json")] = "table",
+    limit: Annotated[int, typer.Option(help="Rows to print in table format")] = 50,
+) -> None:
+    """Run a cookbook query and print the result."""
+    from vwh import queries
+
+    engine = _engine(dsn, data_dir)
+    cols, rows = queries.run(engine, name)
+    engine.close()
+    queries.print_result(cols, rows, fmt, limit)
+
+
+@app.command()
+def bench(
+    data_dir: DataDirOpt = None,
+    dsn: DsnOpt = None,
+    repeats: Annotated[int, typer.Option(help="Timed runs per case")] = 5,
+    out: Annotated[Path, typer.Option(help="CSV with one row per timed case")] = Path(
+        "bench/results/latest.csv"
+    ),
+) -> None:
+    """Time the benchmark cases on DuckDB, SQLite and (with --dsn) PostgreSQL."""
+    from vwh import bench as bm
+
+    paths = data_paths(data_dir)
+    rows = bm.run_all(paths, dsn=dsn, repeats=repeats)
+    bm.write_csv(rows, out)
+    typer.echo(json.dumps(bm.machine_info(), indent=1))
+
+
+if __name__ == "__main__":
+    sys.exit(app())
