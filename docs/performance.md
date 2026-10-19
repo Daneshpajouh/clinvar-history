@@ -75,5 +75,6 @@ index row size 2880 exceeds btree version 4 maximum 2704 for index "bench_cur_ke
 Some ClinVar alleles are kilobases long, and the key carries both alleles.
 The benchmark uses a hash index, which stores a 4-byte hash and serves
 equality lookups (0.48 ms). The warehouse's primary key on
-`variant.variant_key` is a B-tree and will hit the same limit when the full
-data is loaded into PostgreSQL; `ROADMAP.md` milestone 1 covers it.
+`variant.variant_key` is a B-tree on the same values, so a full PostgreSQL
+load is expected to fail the same way; that load has not been run.
+`ROADMAP.md` milestone 1 covers it.

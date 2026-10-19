@@ -21,8 +21,7 @@ docker compose up -d db
 VWH_PG_DSN=postgresql://vwh:vwh@127.0.0.1:55432/vwh pytest -q --cov=vwh
 ```
 
-Run on 2026-10-19 (macOS, PostgreSQL 17.6): 63 passed in 4.79 s. Coverage
-by module from that run:
+Run on 2026-10-19 (macOS, PostgreSQL 17.6): 63 passed, 66% line coverage.
 
 | Module | Coverage |
 | --- | ---: |
@@ -32,17 +31,17 @@ by module from that run:
 | sources/mavedb.py | 100% |
 | validate.py | 100% |
 | db.py | 94% |
-| cli.py | 75% |
-| fetch.py | 30% |
+| cli.py | 73% |
+| queries.py | 72% |
+| fetch.py | 31% |
 | bench.py | 0% |
-| total | 67% |
+| dictionary.py | 0% |
 
 `fetch.py` and `bench.py` talk to remote services and to a database server
 for minutes at a time; they were exercised by the real build described in
 the README rather than by unit tests. The same suite ran inside the Docker
 image (`docker build -t variant-warehouse:1.0.0 .`, Debian bookworm,
-Python 3.13.9) against the PostgreSQL container: 61 passed in 4.02 s, before
-the two CLI tests were added.
+Python 3.13.9) against the PostgreSQL container: 63 passed in 5.68 s.
 
 ## The interrupted-refresh drill
 
