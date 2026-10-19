@@ -19,8 +19,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from vwh.config import Paths
-from vwh.logs import get_logger
+from clinvar_history.config import Paths
+from clinvar_history.logs import get_logger
 
 log = get_logger(__name__)
 

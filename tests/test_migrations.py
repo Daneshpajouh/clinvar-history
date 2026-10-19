@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from vwh.db import Engine, migrate, migration_files
+from clinvar_history.db import Engine, migrate, migration_files
 
 
 def test_engine_specific_files_are_filtered() -> None:

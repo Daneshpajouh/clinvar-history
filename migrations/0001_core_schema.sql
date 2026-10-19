@@ -11,7 +11,7 @@ CREATE TABLE source_release (
     source TEXT NOT NULL CHECK (source IN ('clinvar', 'gnomad', 'mavedb')),
     label TEXT NOT NULL,
     release_date DATE,
-    -- rolled_back rows stay as an audit record of 'vwh unload'.
+    -- rolled_back rows stay as an audit record of 'clinvar-history unload'.
     status TEXT NOT NULL CHECK (status IN ('loading', 'loaded', 'rolled_back')),
     loaded_at TIMESTAMP WITH TIME ZONE,
     UNIQUE (source, label)
@@ -68,7 +68,7 @@ CREATE TABLE clinvar_variation (
     variation_id BIGINT PRIMARY KEY,
     -- Not unique across releases: ClinVar can move an AlleleID to a new
     -- VariationID (AlleleID 3396438 did between 2025-10 and 2026-10).
-    -- vwh validate checks uniqueness within the latest release.
+    -- clinvar-history validate checks uniqueness within the latest release.
     allele_id BIGINT NOT NULL,
     variant_key TEXT REFERENCES variant (variant_key),
     gene_id INTEGER REFERENCES gene (gene_id),
@@ -88,7 +88,7 @@ CREATE TABLE classification (
     classification_id BIGINT PRIMARY KEY DEFAULT nextval('classification_id_seq'),
     -- No inline foreign key to clinvar_variation: DuckDB 1.5 rejects the
     -- upsert of a referenced parent row. PostgreSQL gets the constraint in
-    -- 0004_foreign_keys.postgres.sql; vwh validate checks it on DuckDB.
+    -- 0004_foreign_keys.postgres.sql; clinvar-history validate checks it on DuckDB.
     variation_id BIGINT NOT NULL,
     clinical_significance TEXT NOT NULL,
     clinsig_class TEXT NOT NULL

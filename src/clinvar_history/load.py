@@ -15,10 +15,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from vwh.config import Paths
-from vwh.db import Engine
-from vwh.fetch import read_manifest
-from vwh.logs import get_logger
+from clinvar_history.config import Paths
+from clinvar_history.db import Engine
+from clinvar_history.fetch import read_manifest
+from clinvar_history.logs import get_logger
 
 log = get_logger(__name__)
 
@@ -88,7 +88,8 @@ def _already_loaded(engine: Engine, source: str, label: str, files: list[dict[st
     wanted = {f["path"]: f["sha256"] for f in files}
     if wanted and wanted != recorded:
         raise LoadError(
-            f"{source} {label} is loaded from different files; run 'vwh unload {source}' first"
+            f"{source} {label} is loaded from different files; "
+            f"run 'clinvar-history unload {source}' first"
         )
     log.info("already loaded, skipping", extra={"source": source, "release": label})
     return True

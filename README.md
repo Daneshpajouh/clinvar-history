@@ -1,4 +1,4 @@
-# variant-warehouse
+# clinvar-history
 
 A versioned SQL database of human variant interpretations built from public
 releases: ClinVar (two monthly releases, genome-wide), gnomAD v4.1 allele
@@ -21,7 +21,7 @@ loads that cannot half-finish, and a record of which file each row came from.
 ## Quick start (fixtures, under a minute)
 
 ```
-git clone <this repository> && cd variant-warehouse
+git clone <this repository> && cd clinvar-history
 python3 -m venv .venv && .venv/bin/pip install -e ".[postgres,dev]"
 .venv/bin/pytest -q
 ```
@@ -32,11 +32,11 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[postgres,dev]"
 
 With a PostgreSQL server the same suite runs a second time against it
 (`docker compose up -d db`, then
-`VWH_PG_DSN=postgresql://vwh:vwh@127.0.0.1:55432/vwh .venv/bin/pytest -q`: 85 passed in
+`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history .venv/bin/pytest -q`: 85 passed in
 5.58 s).
 The Docker image runs the same 85 tests on Debian:
-`docker build -t variant-warehouse:1.0.1 .` then
-`docker run --rm -e VWH_PG_DSN=... --entrypoint python variant-warehouse:1.0.1 -m pytest -q`
+`docker build -t clinvar-history:1.0.1 .` then
+`docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.1 -m pytest -q`
 (85 passed in 6.79 s on 2026-10-19, image built from a fresh clone).
 
 ## Full build (real data)
@@ -46,17 +46,17 @@ remote VCF) and about 6 GB free in the data directory: 1.60 GB of raw files,
 0.59 GB of staging Parquet and a 3.4 GB DuckDB file in the 2026-10-19 build.
 
 ```
-export VWH_DATA_DIR=/path/with/5GB/free
-vwh fetch genes && vwh fetch clinvar && vwh fetch gnomad && vwh fetch mavedb
-vwh stage clinvar && vwh stage gnomad && vwh stage mavedb
-vwh load            # add --dsn postgresql://... for PostgreSQL
-vwh validate
-vwh query 03        # reclassifications between the two releases
+export CLINVAR_HISTORY_DATA_DIR=/path/with/5GB/free
+clinvar-history fetch genes && clinvar-history fetch clinvar && clinvar-history fetch gnomad && clinvar-history fetch mavedb
+clinvar-history stage clinvar && clinvar-history stage gnomad && clinvar-history stage mavedb
+clinvar-history load            # add --dsn postgresql://... for PostgreSQL
+clinvar-history validate
+clinvar-history query 03        # reclassifications between the two releases
 ```
 
 Measured on 2026-10-19 (Apple M3 Ultra, 96 GB, macOS, DuckDB 1.5.6, 6 threads):
-31 input files, 1.60 GB. `vwh stage` took 51.6 s for both ClinVar releases,
-8.3 s for gnomAD and 0.8 s for MaveDB. `vwh load`
+31 input files, 1.60 GB. `clinvar-history stage` took 51.6 s for both ClinVar releases,
+8.3 s for gnomAD and 0.8 s for MaveDB. `clinvar-history load`
 took 115 s wall time with a 6.9 GB peak memory footprint and produced a 3.7 GB
 DuckDB file.
 
@@ -78,7 +78,7 @@ All 18 validation checks passed (`docs/validation.md`); query output is in
   SHA-256 in `schema_migrations`; an edited, already-applied file stops the
   run. Files ending `.postgres.sql` hold the foreign keys DuckDB cannot keep
   and the read-only analyst role.
-- `src/vwh/`: the `vwh` command (fetch, stage, load, unload, validate, query,
+- `src/clinvar_history/`: the `clinvar-history` command (fetch, stage, load, unload, validate, query,
   bench, dictionary). Staging uses polars; loading is SQL.
 - `sql/queries/`: eight cookbook queries, each tested on fixtures on both
   engines.
@@ -94,7 +94,7 @@ Design notes:
   SCD row valid from that release; the old row is closed, not overwritten.
 - A release load is one transaction. `tests/test_load.py` crashes it after
   each of five steps and checks that the previous release is still what
-  analysts see. `vwh unload` removes the latest release and writes back the
+  analysts see. `clinvar-history unload` removes the latest release and writes back the
   variation attributes it overwrote; on the full build it restored the 4,212
   overwritten rows (0 rows differing from the 2025-10 staging) in 261 s.
 - ClinVar and gnomAD join on the GRCh38 key `chrom-pos-ref-alt` built from

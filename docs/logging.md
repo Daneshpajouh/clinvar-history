@@ -1,6 +1,6 @@
 # Logging
 
-`vwh` writes one JSON object per line to stderr, and to a file with
+`clinvar-history` writes one JSON object per line to stderr, and to a file with
 `--log-file`. Every line has `ts` (local time with offset), `level`,
 `logger` and `event`; the other keys depend on the event.
 
@@ -19,26 +19,26 @@ and the validation result. The same facts per file (URL, size, SHA-256,
 fetch and load times, rows staged and loaded) go into the `provenance`
 table inside the load transaction.
 
-Excerpt from the full build on 2026-10-19 (`vwh --log-file load_all.jsonl
+Excerpt from the full build on 2026-10-19 (`clinvar-history --log-file load_all.jsonl
 load all`), 2026-10 release:
 
 ```
-{"ts": "2026-10-19T11:56:36-0700", "level": "info", "logger": "vwh.load", "event": "step done", "release": "2026-10", "step": "release", "seconds": 2.07}
-{"ts": "2026-10-19T11:56:38-0700", "level": "info", "logger": "vwh.load", "event": "step done", "release": "2026-10", "step": "variant", "seconds": 2.51}
-{"ts": "2026-10-19T11:56:41-0700", "level": "info", "logger": "vwh.load", "event": "step done", "release": "2026-10", "step": "clinvar_variation", "seconds": 2.69}
-{"ts": "2026-10-19T11:56:45-0700", "level": "info", "logger": "vwh.load", "event": "step done", "release": "2026-10", "step": "classification_close", "seconds": 3.93}
-{"ts": "2026-10-19T11:56:46-0700", "level": "info", "logger": "vwh.load", "event": "step done", "release": "2026-10", "step": "classification_open", "seconds": 1.42}
-{"ts": "2026-10-19T11:56:53-0700", "level": "info", "logger": "vwh.load", "event": "step done", "release": "2026-10", "step": "submission", "seconds": 6.33}
-{"ts": "2026-10-19T11:56:53-0700", "level": "info", "logger": "vwh.load", "event": "clinvar loaded", "release": "2026-10", "variations": 4575785, "submissions_staged": 6735012, "submissions_loaded": 6661309}
+{"ts": "2026-10-19T11:56:36-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "release", "seconds": 2.07}
+{"ts": "2026-10-19T11:56:38-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "variant", "seconds": 2.51}
+{"ts": "2026-10-19T11:56:41-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "clinvar_variation", "seconds": 2.69}
+{"ts": "2026-10-19T11:56:45-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "classification_close", "seconds": 3.93}
+{"ts": "2026-10-19T11:56:46-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "classification_open", "seconds": 1.42}
+{"ts": "2026-10-19T11:56:53-0700", "level": "info", "logger": "clinvar_history.load", "event": "step done", "release": "2026-10", "step": "submission", "seconds": 6.33}
+{"ts": "2026-10-19T11:56:53-0700", "level": "info", "logger": "clinvar_history.load", "event": "clinvar loaded", "release": "2026-10", "variations": 4575785, "submissions_staged": 6735012, "submissions_loaded": 6661309}
 ```
 
 A rerun on the same database at 12:04 found every release recorded with the
 same SHA-256 values and ended with:
 
 ```
-{"ts": "2026-10-19T12:04:57-0700", "level": "info", "logger": "vwh", "event": "load start", "target": "duckdb", "schema_version": "0003_views.sql", "migrations_applied": [], "source": "all"}
-{"ts": "2026-10-19T12:04:57-0700", "level": "info", "logger": "vwh.load", "event": "already loaded, skipping", "source": "clinvar", "release": "2026-10"}
-{"ts": "2026-10-19T12:04:59-0700", "level": "info", "logger": "vwh", "event": "load summary", "status": "ok", "seconds": 1.7, "rows": {"source_release": 4, "provenance": 30, "gene": 20246, "variant": 4919816, "clinvar_variation": 4584619, "classification": 5416637, "submitter": 3580, "submission": 12257320, "population_frequency": 4243184, "score_set": 8, "functional_score": 71644}, "checks_passed": 18, "checks_failed": []}
+{"ts": "2026-10-19T12:04:57-0700", "level": "info", "logger": "clinvar_history", "event": "load start", "target": "duckdb", "schema_version": "0003_views.sql", "migrations_applied": [], "source": "all"}
+{"ts": "2026-10-19T12:04:57-0700", "level": "info", "logger": "clinvar_history.load", "event": "already loaded, skipping", "source": "clinvar", "release": "2026-10"}
+{"ts": "2026-10-19T12:04:59-0700", "level": "info", "logger": "clinvar_history", "event": "load summary", "status": "ok", "seconds": 1.7, "rows": {"source_release": 4, "provenance": 30, "gene": 20246, "variant": 4919816, "clinvar_variation": 4584619, "classification": 5416637, "submitter": 3580, "submission": 12257320, "population_frequency": 4243184, "score_set": 8, "functional_score": 71644}, "checks_passed": 18, "checks_failed": []}
 ```
 
 The `input` lines and the `load start` and `load summary` events were added

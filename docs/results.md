@@ -3,7 +3,7 @@
 Cookbook output on the DuckDB warehouse built on 2026-10-19 at 12:46 PT with
 version 1.0.1 (ClinVar 2025-10 and 2026-10, gnomAD v4.1 joint for ten genes,
 eight MaveDB score sets for seven genes). Produced with
-`vwh --log-level WARNING query NN --format csv` for NN in 01 to 07. Query 08,
+`clinvar-history --log-level WARNING query NN --format csv` for NN in 01 to 07. Query 08,
 a list of every P/LP single nucleotide variant in the panel, is left out.
 
 ## 01. Conflicting aggregate records by gene (top 15)

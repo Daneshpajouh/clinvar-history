@@ -1,5 +1,5 @@
 # Sources and selections for one warehouse build.
-# Files are read from and written to the data directory: VWH_DATA_DIR or --data-dir,
+# Files are read from and written to the data directory: CLINVAR_HISTORY_DATA_DIR or --data-dir,
 # default ./data.
 
 clinvar:

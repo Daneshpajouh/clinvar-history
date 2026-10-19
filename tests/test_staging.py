@@ -7,8 +7,8 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from vwh.config import Paths
-from vwh.sources import clinvar, mavedb
+from clinvar_history.config import Paths
+from clinvar_history.sources import clinvar, mavedb
 
 
 @pytest.mark.parametrize(

@@ -8,8 +8,8 @@ from typing import Any
 
 import polars as pl
 
-from vwh.logs import get_logger
-from vwh.sources.clinvar import PROTEIN_SUB_RE
+from clinvar_history.logs import get_logger
+from clinvar_history.sources.clinvar import PROTEIN_SUB_RE
 
 log = get_logger(__name__)
 

@@ -1,4 +1,4 @@
-"""The vwh command end to end on the fixtures: load, rerun, validate, query, unload."""
+"""The clinvar-history command end to end on the fixtures: load, rerun, validate, query, unload."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import json
 
 from typer.testing import CliRunner
 
-from vwh.cli import app
-from vwh.config import Paths
+from clinvar_history.cli import app
+from clinvar_history.config import Paths
 
 runner = CliRunner()
 

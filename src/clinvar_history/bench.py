@@ -24,8 +24,8 @@ import duckdb
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 
-from vwh.config import Paths
-from vwh.logs import get_logger
+from clinvar_history.config import Paths
+from clinvar_history.logs import get_logger
 
 log = get_logger(__name__)
 

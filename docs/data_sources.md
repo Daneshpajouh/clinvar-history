@@ -1,6 +1,6 @@
 # Data sources
 
-Every file below was fetched by `vwh fetch` on 2026-10-19 and is recorded in `<data_dir>/raw/manifest.jsonl` and, after loading, in the `provenance` table. Raw data stays outside the repository; `tests/data` holds only the hand-written fixtures.
+Every file below was fetched by `clinvar-history fetch` on 2026-10-19 and is recorded in `<data_dir>/raw/manifest.jsonl` and, after loading, in the `provenance` table. Raw data stays outside the repository; `tests/data` holds only the hand-written fixtures.
 
 31 files, 1,595.7 MB in total.
 

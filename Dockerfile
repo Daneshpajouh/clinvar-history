@@ -1,4 +1,4 @@
-# CLI image. bcftools is only needed by 'vwh fetch gnomad' (remote tabix reads).
+# CLI image. bcftools is only needed by 'clinvar-history fetch gnomad' (remote tabix reads).
 FROM python@sha256:b685a4fa58bb19d1814d78a1ec0f0208f351452724f78b20212c984d6e124a34
 
 RUN apt-get update \
@@ -16,7 +16,7 @@ COPY tests ./tests
 # Editable install keeps migrations/ and sql/ at the paths the package reads them from.
 RUN pip install --no-cache-dir -e ".[postgres,dev]"
 
-ENV VWH_DATA_DIR=/data
+ENV CLINVAR_HISTORY_DATA_DIR=/data
 VOLUME ["/data"]
-ENTRYPOINT ["vwh"]
+ENTRYPOINT ["clinvar_history"]
 CMD ["--help"]

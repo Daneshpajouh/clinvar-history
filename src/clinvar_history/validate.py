@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from vwh.db import Engine
+from clinvar_history.db import Engine
 
 # name -> SQL returning the number of violating rows
 ZERO_CHECKS: dict[str, str] = {

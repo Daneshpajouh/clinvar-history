@@ -4,7 +4,7 @@ Hand-written files in the real formats. Gene GENEX, the laboratories LabA to
 LabD and every number here are invented; coordinates for BRCA1 and TP53 are
 real GRCh38 positions so the panel join works. `conftest.py` gzips the
 ClinVar and gnomAD files into a temporary data directory and records them
-in a manifest, as `vwh fetch` would.
+in a manifest, as `clinvar-history fetch` would.
 
 `variant_summary_2025-10.tsv`, `variant_summary_2026-10.tsv` (43 columns,
 one GRCh37 and one GRCh38 row per variant; staging keeps GRCh38):

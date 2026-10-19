@@ -1,5 +1,5 @@
-site_name: variant-warehouse
-repo_url: https://github.com/Daneshpajouh/variant-warehouse
+site_name: clinvar-history
+repo_url: https://github.com/Daneshpajouh/clinvar-history
 theme:
   name: material
 markdown_extensions:

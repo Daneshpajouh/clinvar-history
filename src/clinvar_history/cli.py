@@ -1,4 +1,4 @@
-"""vwh: fetch, stage, load, unload, validate, query, bench and dictionary."""
+"""clinvar_history: fetch, stage, load, unload, validate, query, bench and dictionary."""
 
 from __future__ import annotations
 
@@ -10,18 +10,19 @@ from typing import Annotated
 import duckdb
 import typer
 
-from vwh import __version__
-from vwh.config import data_paths, load_config
-from vwh.db import Engine, connect, migrate
-from vwh.load import LoadError
-from vwh.logs import get_logger, setup_logging
+from clinvar_history import __version__
+from clinvar_history.config import data_paths, load_config
+from clinvar_history.db import Engine, connect, migrate
+from clinvar_history.load import LoadError
+from clinvar_history.logs import get_logger, setup_logging
 
 app = typer.Typer(add_completion=False, no_args_is_help=True, help=__doc__)
-log = get_logger("vwh")
+log = get_logger("clinvar_history")
 
 ConfigOpt = Annotated[Path | None, typer.Option("--config", help="YAML build config")]
 DataDirOpt = Annotated[
-    Path | None, typer.Option("--data-dir", help="Data directory (default VWH_DATA_DIR or ./data)")
+    Path | None,
+    typer.Option("--data-dir", help="Data directory (default CLINVAR_HISTORY_DATA_DIR or ./data)"),
 ]
 DsnOpt = Annotated[
     str | None,
@@ -75,7 +76,7 @@ def fetch(
     data_dir: DataDirOpt = None,
 ) -> None:
     """Download one source into <data_dir>/raw and append to the manifest."""
-    from vwh import fetch as f
+    from clinvar_history import fetch as f
 
     cfg = load_config(config)
     paths = data_paths(data_dir)
@@ -106,7 +107,7 @@ def stage(
     data_dir: DataDirOpt = None,
 ) -> None:
     """Parse raw files into typed Parquet under <data_dir>/staging."""
-    from vwh.sources import clinvar, gnomad, mavedb
+    from clinvar_history.sources import clinvar, gnomad, mavedb
 
     cfg = load_config(config)
     paths = data_paths(data_dir)
@@ -137,9 +138,9 @@ def load(
     """Apply migrations, then load staged data. Re-running with the same files is a no-op."""
     import time
 
-    from vwh import load as ld
-    from vwh import validate as val
-    from vwh.fetch import read_manifest
+    from clinvar_history import load as ld
+    from clinvar_history import validate as val
+    from clinvar_history.fetch import read_manifest
 
     cfg = load_config(config)
     paths = data_paths(data_dir)
@@ -200,7 +201,7 @@ def unload(
     dsn: DsnOpt = None,
 ) -> None:
     """Roll back the most recent ClinVar release in one transaction."""
-    from vwh import load as ld
+    from clinvar_history import load as ld
 
     if source != "clinvar":
         raise typer.BadParameter("only the latest ClinVar release can be unloaded")
@@ -217,7 +218,7 @@ def validate(
     report: Annotated[Path | None, typer.Option(help="Write a Markdown report here")] = None,
 ) -> None:
     """Run the validation checks; exit 1 if any check fails."""
-    from vwh import validate as val
+    from clinvar_history import validate as val
 
     engine = _engine(dsn, data_dir)
     results = val.run_checks(engine)
@@ -239,7 +240,7 @@ def query(
     limit: Annotated[int, typer.Option(help="Rows to print in table format")] = 50,
 ) -> None:
     """Run a cookbook query and print the result."""
-    from vwh import queries
+    from clinvar_history import queries
 
     engine = _engine(dsn, data_dir)
     cols, rows = queries.run(engine, name)
@@ -260,7 +261,7 @@ def bench(
     ),
 ) -> None:
     """Time the benchmark cases on DuckDB, SQLite and (with --dsn) PostgreSQL."""
-    from vwh import bench as bm
+    from clinvar_history import bench as bm
 
     paths = data_paths(data_dir)
     rows = bm.run_all(paths, dsn=dsn, repeats=repeats, plans=plans)
@@ -274,7 +275,7 @@ def dictionary(
     out: Annotated[Path, typer.Option(help="Markdown output")] = Path("docs/data_dictionary.md"),
 ) -> None:
     """Regenerate the data dictionary from the loaded DuckDB catalogue."""
-    from vwh.dictionary import render
+    from clinvar_history.dictionary import render
 
     engine = _engine(None, data_dir)
     out.write_text(render(engine))

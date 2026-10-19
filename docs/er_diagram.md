@@ -24,7 +24,7 @@ erDiagram
 
 Solid lines are foreign keys. On DuckDB the two keys into
 `clinvar_variation` from `classification` and `submission` are checked by
-`vwh validate` instead (see `migrations/0004_foreign_keys.postgres.sql`).
+`clinvar-history validate` instead (see `migrations/0004_foreign_keys.postgres.sql`).
 The dotted line is the MaveDB join, which is a text match, not a key: a
 nucleotide score set matches the transcript and c. change with the transcript
 version dropped, a protein score set matches gene and p. change.
@@ -42,4 +42,4 @@ Keys:
   `is_current` rows have a null `valid_to_release_id`.
 - `clinvar_variation_history`: the attribute values a release overwrote,
   keyed by VariationID and the release that replaced them (4,212 rows for
-  2026-10). `vwh unload` writes them back.
+  2026-10). `clinvar-history unload` writes them back.

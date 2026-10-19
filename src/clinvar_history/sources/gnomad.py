@@ -7,7 +7,7 @@ from pathlib import Path
 
 import polars as pl
 
-from vwh.logs import get_logger
+from clinvar_history.logs import get_logger
 
 log = get_logger(__name__)
 

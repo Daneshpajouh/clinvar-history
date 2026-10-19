@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "variant-warehouse build configuration",
+  "title": "clinvar-history build configuration",
   "type": "object",
   "required": [
     "clinvar",

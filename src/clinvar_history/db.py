@@ -13,8 +13,8 @@ import duckdb
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 
-from vwh.config import REPO_ROOT
-from vwh.logs import get_logger
+from clinvar_history.config import REPO_ROOT
+from clinvar_history.logs import get_logger
 
 log = get_logger(__name__)
 MIGRATIONS_DIR = REPO_ROOT / "migrations"

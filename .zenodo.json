@@ -1,5 +1,5 @@
 {
-  "title": "variant-warehouse",
+  "title": "clinvar-history",
   "upload_type": "software",
   "description": "Versioned SQL database of ClinVar releases, gnomAD v4.1 frequencies and MaveDB scores on DuckDB and PostgreSQL.",
   "creators": [{"name": "Daneshpajouh, Amir"}],

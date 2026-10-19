@@ -11,8 +11,8 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from vwh.config import REPO_ROOT
-from vwh.db import Engine
+from clinvar_history.config import REPO_ROOT
+from clinvar_history.db import Engine
 
 QUERY_DIR = REPO_ROOT / "sql" / "queries"
 

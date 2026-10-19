@@ -10,13 +10,13 @@ The format follows Keep a Changelog; versions follow Semantic Versioning.
   well as the top-level data folder, so in a fresh clone 1 test failed and
   25 errored. The rules for `data`, `site`, `build` and `dist` are now
   anchored to the repository root.
-- Saved DuckDB plans named the build machine's data folder; `vwh bench` now
+- Saved DuckDB plans named the build machine's data folder; `clinvar-history bench` now
   writes paths relative to the data directory and the two committed plans
   show `$DATA_DIR`.
 - A pipeline stage given as a one-word command raised `IndexError` instead
   of `FetchError` when it failed.
-- `vwh fetch` no longer sets a custom curl user agent.
-- `vwh unload` did not undo the attribute values a release had overwritten
+- `clinvar-history fetch` no longer sets a custom curl user agent.
+- `clinvar-history unload` did not undo the attribute values a release had overwritten
   in `clinvar_variation` (4,212 rows for 2026-10). Loads now keep them in
   `clinvar_variation_history` (migration 0006) and unload writes them back;
   on the full build the restored table matched the 2025-10 staging in every
@@ -51,7 +51,7 @@ First release.
 - Schema in five numbered migrations, shared by DuckDB and PostgreSQL;
   applied migrations are checksummed.
 - ClinVar loads as one transaction per release, with the aggregate record as
-  an SCD type 2 history and submissions kept per release; `vwh unload`
+  an SCD type 2 history and submissions kept per release; `clinvar-history unload`
   removes the latest release.
 - gnomAD v4.1 joint frequencies for ten genes and eight MaveDB score sets
   covering seven of them.

@@ -1,24 +1,24 @@
 # PostgreSQL path: docker compose up -d db; then
-#   docker compose run --rm cli load --dsn postgresql://vwh:vwh@db:5432/vwh
+#   docker compose run --rm cli load --dsn postgresql://clinvar_history:clinvar_history@db:5432/clinvar_history
 services:
   db:
     image: postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929  # 17.6
     environment:
-      POSTGRES_USER: vwh
-      POSTGRES_PASSWORD: vwh
-      POSTGRES_DB: vwh
+      POSTGRES_USER: clinvar_history
+      POSTGRES_PASSWORD: clinvar_history
+      POSTGRES_DB: clinvar_history
     ports: ["127.0.0.1:55432:5432"]
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "vwh"]
+      test: ["CMD", "pg_isready", "-U", "clinvar_history"]
       interval: 2s
       retries: 30
   cli:
     build: .
     environment:
-      VWH_DATA_DIR: /data
-      VWH_PG_DSN: postgresql://vwh:vwh@db:5432/vwh
+      CLINVAR_HISTORY_DATA_DIR: /data
+      CLINVAR_HISTORY_PG_DSN: postgresql://clinvar_history:clinvar_history@db:5432/clinvar_history
     volumes:
-      - ${VWH_DATA_DIR:-./data}:/data
+      - ${CLINVAR_HISTORY_DATA_DIR:-./data}:/data
     depends_on:
       db:
         condition: service_healthy

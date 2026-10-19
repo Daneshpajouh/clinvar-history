@@ -1,5 +1,5 @@
 PY ?= .venv/bin/python
-PG_DSN ?= postgresql://vwh:vwh@127.0.0.1:55432/vwh
+PG_DSN ?= postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history
 
 .PHONY: install lint test test-pg check docs image
 
@@ -17,7 +17,7 @@ test:
 
 test-pg:
 	docker compose up -d db
-	VWH_PG_DSN=$(PG_DSN) $(PY) -m pytest -q --cov=vwh
+	CLINVAR_HISTORY_PG_DSN=$(PG_DSN) $(PY) -m pytest -q --cov=clinvar_history
 
 check: lint test
 
@@ -25,4 +25,4 @@ docs:
 	.venv/bin/mkdocs build --strict
 
 image:
-	docker build -t variant-warehouse:1.0.1 .
+	docker build -t clinvar-history:1.0.1 .

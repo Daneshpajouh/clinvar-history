@@ -22,7 +22,7 @@ empty `size=` was the only sign. A later retry also hit
 `curl: (18) transfer closed with 62068409 bytes remaining to read` and recovered
 through `--retry`.
 
-Fix: `vwh.fetch.curl` reads the return code first, writes to a `.part` file,
+Fix: `clinvar_history.fetch.curl` reads the return code first, writes to a `.part` file,
 renames only on success, and `fetch_clinvar` compares the local size with the
 server's reported size and tests the whole gzip stream before recording the
 file. All four files matched the FTP sizes (450,727,547; 394,172,714;
@@ -51,7 +51,7 @@ ConstraintException: Duplicate key "allele_id: 3396438"
 `clinvar_variation.allele_id` had a UNIQUE constraint across all releases.
 Between 2025-10 and 2026-10, 65 AlleleIDs moved to a new VariationID (for
 example VariationID 309920 became 4917283 for the MYO1A allele). The
-constraint was dropped; `vwh validate` now checks AlleleID uniqueness among
+constraint was dropped; `clinvar-history validate` now checks AlleleID uniqueness among
 current variations only.
 
 ## 4. DuckDB foreign keys and a five-minute upsert
@@ -66,7 +66,7 @@ Violates foreign key constraint because key "variation_id: 1369313" is still ref
 DuckDB 1.5.6 runs `INSERT ... ON CONFLICT DO UPDATE` on a referenced parent
 row as a delete and insert, which the foreign key check rejects. The two
 constraints moved to `migrations/0004_foreign_keys.postgres.sql` and
-`vwh validate` checks them on DuckDB.
+`clinvar-history validate` checks them on DuckDB.
 
 With the constraints gone the upsert succeeded but took 295.24 s for the
 `clinvar_variation` step (4,575,785 staged rows against 3,708,788 existing,

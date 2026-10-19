@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
-from vwh import queries
-from vwh.config import Paths
-from vwh.db import Engine
+from clinvar_history import queries
+from clinvar_history.config import Paths
+from clinvar_history.db import Engine
 
 from .conftest import load_all
 

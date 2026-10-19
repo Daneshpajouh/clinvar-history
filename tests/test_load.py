@@ -7,10 +7,10 @@ from typing import Any
 
 import pytest
 
-from vwh import load
-from vwh.config import Paths
-from vwh.db import Engine, migrate
-from vwh.validate import run_checks
+from clinvar_history import load
+from clinvar_history.config import Paths
+from clinvar_history.db import Engine, migrate
+from clinvar_history.validate import run_checks
 
 TABLES = [
     "source_release",

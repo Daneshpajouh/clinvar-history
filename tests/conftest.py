@@ -15,11 +15,11 @@ from typing import Any
 
 import pytest
 
-from vwh import load
-from vwh.config import Paths
-from vwh.db import Engine, connect, migrate
-from vwh.fetch import record
-from vwh.sources import clinvar, gnomad, mavedb
+from clinvar_history import load
+from clinvar_history.config import Paths
+from clinvar_history.db import Engine, connect, migrate
+from clinvar_history.fetch import record
+from clinvar_history.sources import clinvar, gnomad, mavedb
 
 DATA = Path(__file__).parent / "data"
 RELEASES = ["2025-10", "2026-10"]
@@ -37,7 +37,7 @@ def _gzip_copy(src: Path, dest: Path) -> None:
 
 
 def build_raw(paths: Paths) -> None:
-    """Lay the fixtures out the way 'vwh fetch' would, manifest included."""
+    """Lay the fixtures out the way 'clinvar-history fetch' would, manifest included."""
     for release in RELEASES:
         for kind in ("variant_summary", "submission_summary"):
             dest = paths.raw / "clinvar" / f"{kind}_{release}.txt.gz"
@@ -95,7 +95,7 @@ def load_all(engine: Engine, paths: Paths) -> None:
 
 @pytest.fixture(scope="session")
 def fixture_paths(tmp_path_factory: pytest.TempPathFactory) -> Paths:
-    paths = Paths(tmp_path_factory.mktemp("vwh-data"))
+    paths = Paths(tmp_path_factory.mktemp("clinvar_history-data"))
     build_raw(paths)
     stage_all(paths)
     return paths
@@ -108,15 +108,15 @@ def reset_postgres(dsn: str, schema: str) -> None:
         con.execute(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
 
 
-ENGINES = ["duckdb"] + (["postgres"] if os.environ.get("VWH_PG_DSN") else [])
+ENGINES = ["duckdb"] + (["postgres"] if os.environ.get("CLINVAR_HISTORY_PG_DSN") else [])
 
 
 @pytest.fixture(params=ENGINES)
 def empty_engine(request: pytest.FixtureRequest) -> Iterator[Engine]:
     if request.param == "postgres":
-        dsn = os.environ["VWH_PG_DSN"]
-        reset_postgres(dsn, "vwh_test_empty")
-        engine = connect(dsn=dsn, schema="vwh_test_empty")
+        dsn = os.environ["CLINVAR_HISTORY_PG_DSN"]
+        reset_postgres(dsn, "clinvar_history_test_empty")
+        engine = connect(dsn=dsn, schema="clinvar_history_test_empty")
     else:
         engine = connect()
     yield engine
@@ -126,9 +126,9 @@ def empty_engine(request: pytest.FixtureRequest) -> Iterator[Engine]:
 @pytest.fixture(scope="session", params=ENGINES)
 def loaded_engine(request: pytest.FixtureRequest, fixture_paths: Paths) -> Iterator[Engine]:
     if request.param == "postgres":
-        dsn = os.environ["VWH_PG_DSN"]
-        reset_postgres(dsn, "vwh_test_loaded")
-        engine = connect(dsn=dsn, schema="vwh_test_loaded")
+        dsn = os.environ["CLINVAR_HISTORY_PG_DSN"]
+        reset_postgres(dsn, "clinvar_history_test_loaded")
+        engine = connect(dsn=dsn, schema="clinvar_history_test_loaded")
     else:
         engine = connect()
     load_all(engine, fixture_paths)

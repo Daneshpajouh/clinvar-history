@@ -1,5 +1,5 @@
 -- Attribute values that a release load overwrote in clinvar_variation, kept
--- so that vwh unload can restore them. One row per variation and release.
+-- so that clinvar-history unload can restore them. One row per variation and release.
 CREATE TABLE clinvar_variation_history (
     variation_id BIGINT NOT NULL,
     replaced_by_release_id INTEGER NOT NULL REFERENCES source_release (release_id),

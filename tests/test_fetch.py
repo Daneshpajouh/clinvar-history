@@ -11,8 +11,8 @@ from typing import Any
 
 import pytest
 
-from vwh import fetch
-from vwh.config import Paths
+from clinvar_history import fetch
+from clinvar_history.config import Paths
 
 CONFIG: dict[str, Any] = {
     "clinvar": {"base_url": "ftp://example.org/clinvar"},

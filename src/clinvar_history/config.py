@@ -52,5 +52,5 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
 
 
 def data_paths(data_dir: str | Path | None = None) -> Paths:
-    base = data_dir or os.environ.get("VWH_DATA_DIR") or (REPO_ROOT / "data")
+    base = data_dir or os.environ.get("CLINVAR_HISTORY_DATA_DIR") or (REPO_ROOT / "data")
     return Paths(Path(base))

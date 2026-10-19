@@ -6,7 +6,7 @@ to 6 threads, SQLite 3.50.4 (the build Python links), PostgreSQL 17.6 in Docker
 (`shared_buffers=2GB`, `work_mem=256MB`). Raw results:
 `bench/results/bench_2026-10-19.csv`; plans: `bench/plans/`. File paths in
 the saved DuckDB plans are shown as `$DATA_DIR/...`: the two plans from this
-run were edited to that form afterwards, and `vwh bench` now writes them
+run were edited to that form afterwards, and `clinvar-history bench` now writes them
 relative to the data directory.
 
 ## Load: rewriting a 295-second upsert
@@ -26,7 +26,7 @@ release is read from `classification`). Same data, same machine:
 | Step | Before | After |
 | --- | ---: | ---: |
 | `clinvar_variation`, 2026-10 on top of 2025-10 | 295.24 s | 2.69 s |
-| whole `vwh load all` (both releases, gnomAD, MaveDB) | not timed: the one full run with the old code was stopped in this step after 4.5 minutes so the step could be timed alone | 115.05 s wall, 6.9 GB peak |
+| whole `clinvar-history load all` (both releases, gnomAD, MaveDB) | not timed: the one full run with the old code was stopped in this step after 4.5 minutes so the step could be timed alone | 115.05 s wall, 6.9 GB peak |
 
 An isolated rerun of the two new statements on a copy of the 2025-10
 database took 0.92 s (update) and 2.38 s (insert),
@@ -34,7 +34,7 @@ database took 0.92 s (update) and 2.38 s (insert),
 
 ## Queries on 4,555,177 current ClinVar records
 
-`vwh bench` exports the current records that have a GRCh38 key to three
+`clinvar-history bench` exports the current records that have a GRCh38 key to three
 files and loads the same rows into SQLite and PostgreSQL. Each case runs
 once to warm up, then 5 timed runs; the table shows the median.
 

@@ -8,17 +8,17 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from vwh import bench
-from vwh.config import Paths
-from vwh.db import connect
-from vwh.dictionary import TABLES, render
+from clinvar_history import bench
+from clinvar_history.config import Paths
+from clinvar_history.db import connect
+from clinvar_history.dictionary import TABLES, render
 
 from .conftest import build_raw, load_all, stage_all
 
 
 @pytest.fixture(scope="module")
 def file_warehouse(tmp_path_factory: pytest.TempPathFactory) -> Paths:
-    paths = Paths(tmp_path_factory.mktemp("vwh-bench"))
+    paths = Paths(tmp_path_factory.mktemp("clinvar_history-bench"))
     build_raw(paths)
     stage_all(paths)
     engine = connect(duckdb_path=paths.duckdb_path)
@@ -31,7 +31,7 @@ def test_engines_agree_and_plans_carry_no_local_paths(
     file_warehouse: Paths, tmp_path: Path
 ) -> None:
     plans = tmp_path / "plans"
-    dsn = os.environ.get("VWH_PG_DSN")
+    dsn = os.environ.get("CLINVAR_HISTORY_PG_DSN")
     rows = bench.run_all(file_warehouse, dsn=dsn, repeats=1, plans=plans)
     engines = {"duckdb", "sqlite"} | ({"postgres"} if dsn else set())
     assert {r["engine"] for r in rows} == engines
@@ -53,9 +53,10 @@ def test_engines_agree_and_plans_carry_no_local_paths(
 
 
 def test_normalise_paths() -> None:
-    text = "read_parquet('/srv/vwh/bench/a.parquet')"
+    text = "read_parquet('/srv/clinvar_history/bench/a.parquet')"
     assert (
-        bench.normalise_paths(text, Path("/srv/vwh")) == "read_parquet('$DATA_DIR/bench/a.parquet')"
+        bench.normalise_paths(text, Path("/srv/clinvar_history"))
+        == "read_parquet('$DATA_DIR/bench/a.parquet')"
     )
 
 
