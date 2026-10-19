@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clinvar-history"
-version = "1.0.1"
+version = "1.0.2"
 description = "Versioned SQL database of ClinVar releases, gnomAD v4.1 frequencies and MaveDB scores on DuckDB and PostgreSQL"
 readme = "README.md"
 license = "Apache-2.0"

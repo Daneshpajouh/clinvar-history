@@ -2,6 +2,19 @@
 
 The format follows Keep a Changelog; versions follow Semantic Versioning.
 
+## 1.0.2 - 2026-10-19
+
+### Changed
+
+- Renamed from variant-warehouse to clinvar-history: Python package
+  `clinvar_history`, command `clinvar-history`, environment variables
+  `CLINVAR_HISTORY_*`, and PostgreSQL database and roles `clinvar_history*`.
+  Migrations 0001, 0005 and 0006 changed with the names, so a database built
+  with 1.0.1 has to be rebuilt; `migrate()` refuses an applied file whose
+  checksum changed.
+- The README opening states the PostgreSQL full-load limit, and the VUS to
+  conflicting count is set beside clinvar-delta's.
+
 ## 1.0.1 - 2026-10-19
 
 ### Fixed

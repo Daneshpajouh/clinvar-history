@@ -4,6 +4,6 @@
   "description": "Versioned SQL database of ClinVar releases, gnomAD v4.1 frequencies and MaveDB scores on DuckDB and PostgreSQL.",
   "creators": [{"name": "Daneshpajouh, Amir"}],
   "license": "Apache-2.0",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "keywords": ["ClinVar", "gnomAD", "MaveDB", "DuckDB", "PostgreSQL", "variant interpretation"]
 }

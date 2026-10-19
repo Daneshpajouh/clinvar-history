@@ -25,4 +25,4 @@ docs:
 	.venv/bin/mkdocs build --strict
 
 image:
-	docker build -t clinvar-history:1.0.1 .
+	docker build -t clinvar-history:1.0.2 .
