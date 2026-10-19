@@ -29,6 +29,7 @@ until step 5 commits.
    release. Look at the P/LP to B/LB and B/LB to P/LP rows (20 and 8 between
    2025-10 and 2026-10); those are the ones a lab will ask about.
 8. If anything is wrong after commit, `vwh unload clinvar` removes the
-   latest release in one transaction and marks it `rolled_back`.
+   latest release in one transaction, restores the variation attributes it
+   overwrote and marks it `rolled_back` (261 s on the full 2026-10 release).
 9. Record the release, the validation report and any deviations in the
    CHANGELOG under "Data".

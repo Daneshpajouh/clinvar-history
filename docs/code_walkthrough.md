@@ -22,7 +22,9 @@ Read in this order; each file is short.
    core: genes, variants, changed variations, then the SCD type 2 step
    (close current rows whose aggregate record changed or disappeared, open
    rows for new or changed records), then submissions and provenance.
-   `unload_latest_clinvar` reverses it.
+   `unload_latest_clinvar` removes the release's rows, reopens the versions
+   it closed and writes back overwritten variation attributes from
+   `clinvar_variation_history`; gene rows and variant keys it added stay.
 6. `src/vwh/validate.py`: checks as SQL counts that must be zero.
 7. `sql/queries/`: the cookbook. `06_mave_concordance.sql` is the longest:
    it labels each functional score only when all matching ClinVar variants

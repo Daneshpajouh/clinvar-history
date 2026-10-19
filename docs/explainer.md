@@ -23,9 +23,11 @@ Two other public sources help judge a variant:
 This project puts all three in one database and keeps every ClinVar
 release, so a question like "what did ClinVar say about this variant last
 October, and do the population counts and the lab experiments agree?" is one
-query. For the ten genes loaded, the experiments separate pathogenic from
-benign variants well: for BRCA1, a randomly chosen pathogenic variant scores
-lower than a randomly chosen benign one 99.1% of the time.
+query. For the seven genes with MaveDB data, the experiments separate
+pathogenic from benign variants well: in the BRCA1 score set
+urn:mavedb:00000097-0-2, a randomly chosen pathogenic variant scores lower
+than a randomly chosen benign one 99.1% of the time (`docs/results.md`,
+query 06, with the figure for each score set).
 
 The database refuses to half-load a release: either the whole month goes in
 or nothing changes. Every row can be traced to the file it came from and

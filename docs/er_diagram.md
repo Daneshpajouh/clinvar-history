@@ -13,6 +13,8 @@ erDiagram
     variant ||--o{ population_frequency : "variant_key"
     clinvar_variation ||--o{ classification : "variation_id"
     clinvar_variation ||--o{ submission : "variation_id"
+    clinvar_variation ||--o{ clinvar_variation_history : "variation_id"
+    source_release ||--o{ clinvar_variation_history : "replaced by"
     submitter ||--o{ submission : "submitter_id"
     review_status ||--o{ classification : "review_status"
     ancestry_group ||--o{ population_frequency : "ancestry_group"
@@ -38,3 +40,6 @@ Keys:
   between 2025-10 and 2026-10.
 - `classification`: one row per version of the aggregate record;
   `is_current` rows have a null `valid_to_release_id`.
+- `clinvar_variation_history`: the attribute values a release overwrote,
+  keyed by VariationID and the release that replaced them (4,212 rows for
+  2026-10). `vwh unload` writes them back.

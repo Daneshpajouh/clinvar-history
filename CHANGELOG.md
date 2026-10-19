@@ -16,12 +16,33 @@ The format follows Keep a Changelog; versions follow Semantic Versioning.
 - A pipeline stage given as a one-word command raised `IndexError` instead
   of `FetchError` when it failed.
 - `vwh fetch` no longer sets a custom curl user agent.
+- `vwh unload` did not undo the attribute values a release had overwritten
+  in `clinvar_variation` (4,212 rows for 2026-10). Loads now keep them in
+  `clinvar_variation_history` (migration 0006) and unload writes them back;
+  on the full build the restored table matched the 2025-10 staging in every
+  row. The unload test compares full table contents.
+- Queries 04 and 05 read every loaded gnomAD release and every FILTER value.
+  They now use the latest release, PASS sites only and AN >= 1000 in a group.
+  CHEK2 c.1100del (FILTER `EXOMES_FILTERED`) drops out of query 05.
+- Query 06 took the minimum of a key scored twice; it now takes the mean, and
+  its header says VUS and conflicting records are set aside before the
+  agreement check.
+- `load_mavedb` raised `ValueError` when the manifest had no MaveDB files; it
+  now logs and skips.
+- A literal `%` in a parameterised query broke on PostgreSQL; it is doubled
+  before psycopg sees it.
+- DuckDB needs `pytz` to return timestamp-with-time-zone columns; it is now a
+  dependency.
+- The package description named ENCODE and HPRC, which are not loaded, and
+  several documents said MaveDB covers ten genes (it covers seven).
 
 ### Changed
 
 - Data terms cite the gnomAD CC0 policy and the Ensembl disclaimer.
-- Tests for the fetcher (curl faked), the benchmark and the data dictionary:
-  77 tests, 92% line coverage on DuckDB and PostgreSQL.
+- Tests for the fetcher (curl faked), the benchmark and the data dictionary,
+  and a regression test for each fix above: 85 tests, 92% line coverage on
+  DuckDB and PostgreSQL.
+- `docs/results.md` holds the cookbook output of the full build.
 
 ## 1.0.0 - 2026-10-19
 
@@ -32,7 +53,8 @@ First release.
 - ClinVar loads as one transaction per release, with the aggregate record as
   an SCD type 2 history and submissions kept per release; `vwh unload`
   removes the latest release.
-- gnomAD v4.1 joint frequencies and MaveDB scores for ten genes.
+- gnomAD v4.1 joint frequencies for ten genes and eight MaveDB score sets
+  covering seven of them.
 - Eight cookbook queries, each tested on fixtures on both engines.
 - Benchmarks for storage layout and engine choice, with plans.
 

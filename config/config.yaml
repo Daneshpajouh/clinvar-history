@@ -10,7 +10,8 @@ clinvar:
   assembly: GRCh38
 
 panel:
-  # Hereditary cancer genes with public multiplexed functional data.
+  # Hereditary cancer genes. gnomAD is read for all ten; MaveDB score sets
+  # (below) cover seven of them.
   genes: [BRCA1, BRCA2, TP53, PTEN, MSH2, MLH1, MSH6, PMS2, PALB2, CHEK2]
   ensembl_lookup_url: https://rest.ensembl.org/lookup/symbol/homo_sapiens
   flank_bp: 0

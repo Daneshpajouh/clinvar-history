@@ -34,10 +34,10 @@ def score_set_row(meta: dict[str, Any], cfg_entry: dict[str, Any]) -> dict[str, 
 def match_keys(scores: pl.DataFrame, gene: str, level: str) -> pl.Expr:
     """Key that lines up with clinvar_variation.hgvs_c_key or hgvs_p_key.
 
-    Nucleotide sets give "NM_007294.3:c.5565A>T"; the transcript version is
-    dropped because ClinVar may cite a newer version of the same transcript.
-    Protein sets give "p.Arg175His"; only single amino acid substitutions,
-    nonsense and synonymous changes get a key.
+    Nucleotide sets turn "NM_007294.3:c.5565A>T" into "NM_007294:c.5565A>T";
+    the transcript version is dropped because ClinVar may cite a newer version
+    of the same transcript. Protein sets give "TP53:p.Arg175His"; only single
+    amino acid substitutions, nonsense and synonymous changes get a key.
     """
     if level == "nucleotide":
         parts = pl.col("hgvs_nt").str.extract_groups(r"^(?<tx>N[MR]_\d+)\.\d+:(?<c>c\..+)$")

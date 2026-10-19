@@ -7,7 +7,8 @@ from vwh.db import Engine
 TABLES = {
     "source_release": (
         "One row per loaded source release. status 'rolled_back'"
-        " keeps an audit row after vwh unload."
+        " keeps an audit row after vwh unload. For ClinVar, release_date is the"
+        " first day of the release month, not the day NCBI published the files."
     ),
     "provenance": (
         "One row per input file: URL, size, SHA-256, fetch and load times, rows staged and loaded."
@@ -23,6 +24,10 @@ TABLES = {
         "ClinVar VariationID with its AlleleID, HGVS parts and match"
         " keys; attributes from the latest release."
     ),
+    "clinvar_variation_history": (
+        "clinvar_variation attribute values overwritten by a release load,"
+        " kept so vwh unload can restore them."
+    ),
     "classification": (
         "Aggregate germline record per VariationID as an SCD type 2 history across releases."
     ),
@@ -33,7 +38,10 @@ TABLES = {
         "Individual SCV records per release, kept apart from the aggregate classification."
     ),
     "population_frequency": "gnomAD v4.1 joint allele counts per variant and ancestry group.",
-    "score_set": "MaveDB score sets with licence, DOI and the level used to match ClinVar.",
+    "score_set": (
+        "MaveDB score sets with licence, DOI and the level used to match ClinVar."
+        " A load replaces the sets it names; there is no history."
+    ),
     "functional_score": "MaveDB variant scores with the key used to join ClinVar.",
 }
 

@@ -26,7 +26,7 @@ release is read from `classification`). Same data, same machine:
 | Step | Before | After |
 | --- | ---: | ---: |
 | `clinvar_variation`, 2026-10 on top of 2025-10 | 295.24 s | 2.69 s |
-| whole `vwh load all` (both releases, gnomAD, MaveDB) | not completed | 115.05 s wall, 6.9 GB peak |
+| whole `vwh load all` (both releases, gnomAD, MaveDB) | not timed: the one full run with the old code was stopped in this step after 4.5 minutes so the step could be timed alone | 115.05 s wall, 6.9 GB peak |
 
 An isolated rerun of the two new statements on a copy of the 2025-10
 database took 0.92 s (update) and 2.38 s (insert),

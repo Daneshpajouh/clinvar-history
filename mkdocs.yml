@@ -4,6 +4,9 @@ theme:
   name: material
 markdown_extensions:
   - tables
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -18,6 +21,7 @@ nav:
   - Code walk-through: code_walkthrough.md
   - Monthly refresh SOP: sop_monthly_refresh.md
   - Validation report: validation.md
+  - Results: results.md
   - Performance: performance.md
   - Testing: testing.md
   - Logging: logging.md

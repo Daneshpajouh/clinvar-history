@@ -1,6 +1,6 @@
 # Validation report
 
-Output of `vwh validate --report` on the full DuckDB build of 2026-10-19 (ClinVar 2025-10 and 2026-10, gnomAD v4.1 for ten genes, eight MaveDB score sets). Each check is a SQL count of violating rows in `src/vwh/validate.py`; the row-count checks compare the rows staged from each file with the rows loaded.
+Output of `vwh validate --report` on the full DuckDB build of 2026-10-19 (ClinVar 2025-10 and 2026-10, gnomAD v4.1 for ten genes, eight MaveDB score sets for seven genes). Each check is a SQL count of violating rows in `src/vwh/validate.py`; the row-count checks compare the rows staged from each file with the rows loaded.
 
 | Check (duckdb) | Result | Detail |
 | --- | --- | --- |
