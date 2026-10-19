@@ -25,14 +25,15 @@ from vwh.logs import get_logger
 log = get_logger(__name__)
 
 BCFTOOLS = shutil.which("bcftools") or "bcftools"
-USER_AGENT = "variant-warehouse/1.0 (research portfolio; contact via GitHub Daneshpajouh)"
 
 TERMS = {
     "clinvar": "NCBI: no restrictions on use or distribution; "
     "https://www.ncbi.nlm.nih.gov/home/about/policies/",
-    "gnomad": "gnomAD terms of use; https://gnomad.broadinstitute.org/terms",
+    "gnomad": "gnomAD primary data CC0 1.0; some annotations carry their own terms; "
+    "https://gnomad.broadinstitute.org/policies",
     "mavedb": "Per score set licence, recorded in score_set.licence",
-    "ensembl": "Ensembl REST API terms; https://www.ensembl.org/info/about/legal/",
+    "ensembl": "Ensembl: no restrictions on access to or use of its data; "
+    "https://mart.ensembl.org/info/about/legal/disclaimer.html",
 }
 
 
@@ -96,7 +97,7 @@ def read_manifest(paths: Paths) -> list[dict[str, Any]]:
 def remote_size(url: str) -> int | None:
     """Content-Length from a HEAD request (FTP servers report SIZE the same way)."""
     proc = subprocess.run(
-        ["curl", "-sSI", "-L", "-m", "60", "-A", USER_AGENT, url],
+        ["curl", "-sSI", "-L", "-m", "60", url],
         capture_output=True,
         text=True,
         check=False,
@@ -134,8 +135,6 @@ def curl(
         "--retry-delay",
         "20",
         "--retry-all-errors",
-        "-A",
-        USER_AGENT,
         "-o",
         str(part),
         url,
@@ -295,7 +294,8 @@ def _run_pipe(cmds: list[list[str]], dest: Path) -> None:
         for cmd, p in zip(cmds, procs, strict=True):
             _, err = p.communicate()
             if p.returncode != 0:
-                errors.append(f"{cmd[0]} {cmd[1]} rc={p.returncode}: {err.decode()[-500:]}")
+                stage = " ".join(cmd[:2])
+                errors.append(f"{stage} rc={p.returncode}: {err.decode()[-500:]}")
     if errors:
         part.unlink(missing_ok=True)
         raise FetchError("; ".join(errors))
