@@ -4,7 +4,10 @@ All numbers are from runs on 2026-10-19 on one machine: Apple M3 Ultra,
 28 logical CPUs, 96 GB RAM, macOS 27.0.1, Python 3.13.9, DuckDB 1.5.6 limited
 to 6 threads, SQLite 3.50.4 (the build Python links), PostgreSQL 17.6 in Docker
 (`shared_buffers=2GB`, `work_mem=256MB`). Raw results:
-`bench/results/bench_2026-10-19.csv`; plans: `bench/plans/`.
+`bench/results/bench_2026-10-19.csv`; plans: `bench/plans/`. File paths in
+the saved DuckDB plans are shown as `$DATA_DIR/...`: the two plans from this
+run were edited to that form afterwards, and `vwh bench` now writes them
+relative to the data directory.
 
 ## Load: rewriting a 295-second upsert
 

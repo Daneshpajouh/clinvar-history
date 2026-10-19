@@ -7,6 +7,7 @@ Three layers, each with one command.
 | Unit | parsing rules: class mapping, HGVS name parsing, variant class, PAR duplicates, repeated SCVs, missing VCF alleles, unparseable dates, MaveDB rows without HGVS | `pytest tests/test_staging.py` |
 | Load and SQL | migrations, SCD history, idempotent reloads, release order, interrupted-refresh drill, unload, every cookbook query with exact expected rows | `pytest tests/test_load.py tests/test_queries.py tests/test_migrations.py` |
 | End to end | the `vwh` command on the fixtures: load twice, validate, query, unload | `pytest tests/test_cli.py` |
+| Fetch and bench | downloads with curl and bcftools faked (failed and short transfers, truncated gzip, wrong assembly, manifest), a one-repeat benchmark on the fixture warehouse, the generated data dictionary | `pytest tests/test_fetch.py tests/test_bench.py` |
 
 The fixtures are hand-written and small enough to check by hand; each row
 is described in `tests/data/README.md`, and the expected query results sit
@@ -21,7 +22,8 @@ docker compose up -d db
 VWH_PG_DSN=postgresql://vwh:vwh@127.0.0.1:55432/vwh pytest -q --cov=vwh
 ```
 
-Run on 2026-10-19 (macOS, PostgreSQL 17.6): 63 passed, 66% line coverage.
+Run on 2026-10-19 (macOS, PostgreSQL 17.6): 77 passed, 92% line coverage
+(56 tests without `VWH_PG_DSN`).
 
 | Module | Coverage |
 | --- | ---: |
@@ -31,17 +33,18 @@ Run on 2026-10-19 (macOS, PostgreSQL 17.6): 63 passed, 66% line coverage.
 | sources/mavedb.py | 100% |
 | validate.py | 100% |
 | db.py | 94% |
+| fetch.py | 94% |
+| bench.py | 99% |
+| dictionary.py | 100% |
 | cli.py | 73% |
 | queries.py | 72% |
-| fetch.py | 31% |
-| bench.py | 0% |
-| dictionary.py | 0% |
+| logs.py | 86% |
+| config.py | 98% |
 
-`fetch.py` and `bench.py` talk to remote services and to a database server
-for minutes at a time; they were exercised by the real build described in
-the README rather than by unit tests. The same suite ran inside the Docker
-image (`docker build -t variant-warehouse:1.0.0 .`, Debian bookworm,
-Python 3.13.9) against the PostgreSQL container: 63 passed in 5.68 s.
+Not covered: in `cli.py`, the `fetch`, `bench`, `dictionary` and `version`
+commands (their library functions are tested directly), the load-failure
+branch and the gnomAD and MaveDB branches of `stage`; in `queries.py`, the
+CSV and table printers.
 
 ## The interrupted-refresh drill
 

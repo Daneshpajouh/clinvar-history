@@ -2,6 +2,27 @@
 
 The format follows Keep a Changelog; versions follow Semantic Versioning.
 
+## 1.0.1 - 2026-10-19
+
+### Fixed
+
+- `tests/data` was not committed: the ignore rule `data/` matched it as
+  well as the top-level data folder, so in a fresh clone 1 test failed and
+  25 errored. The rules for `data`, `site`, `build` and `dist` are now
+  anchored to the repository root.
+- Saved DuckDB plans named the build machine's data folder; `vwh bench` now
+  writes paths relative to the data directory and the two committed plans
+  show `$DATA_DIR`.
+- A pipeline stage given as a one-word command raised `IndexError` instead
+  of `FetchError` when it failed.
+- `vwh fetch` no longer sets a custom curl user agent.
+
+### Changed
+
+- Data terms cite the gnomAD CC0 policy and the Ensembl disclaimer.
+- Tests for the fetcher (curl faked), the benchmark and the data dictionary:
+  77 tests, 92% line coverage on DuckDB and PostgreSQL.
+
 ## 1.0.0 - 2026-10-19
 
 First release.

@@ -6,10 +6,12 @@ Every file below was fetched by `vwh fetch` on 2026-10-19 and is recorded in `<d
 
 ## Terms
 
+The gnomAD and Ensembl terms were checked at source in a browser on 2026-10-19. Neither page could be read by script from the build machine: the gnomAD page renders client-side and the Ensembl mart host did not answer curl.
+
 - ClinVar: NCBI places no restrictions on use or distribution of the data (https://www.ncbi.nlm.nih.gov/home/about/policies/). The HTTPS host's robots.txt disallows all crawlers, so the four named files were fetched over NCBI's FTP service, which NCBI provides for bulk downloads; nothing was crawled.
-- gnomAD v4.1: terms of use at https://gnomad.broadinstitute.org/terms, as linked from the AWS Open Data registry entry. The page renders client-side and was not read by script. Only ten gene regions were read, by remote tabix index, keeping 45 INFO fields.
+- gnomAD v4.1: primary data are released under CC0 1.0; some annotations, such as SpliceAI, carry their own terms (https://gnomad.broadinstitute.org/policies). Only ten gene regions were read, by remote tabix index, keeping 45 INFO fields, none of them third-party annotations.
 - MaveDB: each score set carries its own licence; all eight used here are CC0 (from the API record, stored in `score_set.licence`).
-- Ensembl REST: gene coordinates only; terms at https://www.ensembl.org/info/about/legal/ (that host returned HTTP 403 to curl, so the text was not read by script).
+- Ensembl REST (gene coordinates only): no restrictions on access to or use of Ensembl data; Ensembl code is Apache 2.0, and some third-party data may carry constraints (https://mart.ensembl.org/info/about/legal/disclaimer.html).
 
 ## Files
 

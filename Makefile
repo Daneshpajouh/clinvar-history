@@ -25,4 +25,4 @@ docs:
 	.venv/bin/mkdocs build --strict
 
 image:
-	docker build -t variant-warehouse:1.0.0 .
+	docker build -t variant-warehouse:1.0.1 .
