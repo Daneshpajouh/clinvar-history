@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -16,6 +17,7 @@ TABLES = [
     "provenance",
     "gene",
     "clinvar_variation",
+    "clinvar_variation_history",
     "classification",
     "submitter",
     "submission",
@@ -23,12 +25,12 @@ TABLES = [
 
 
 def snapshot(engine: Engine) -> dict[str, Any]:
-    out: dict[str, Any] = {t: engine.scalar(f"SELECT count(*) FROM {t}") for t in TABLES}
-    _, rows = engine.query(
-        "SELECT variation_id, clinical_significance, is_current, valid_to_release_id"
-        " FROM classification ORDER BY variation_id, valid_from_release_id"
-    )
-    out["classification_rows"] = rows
+    """Full contents of every release-scoped table, in a stable order."""
+    out: dict[str, Any] = {}
+    for table in TABLES:
+        cols, _ = engine.query(f"SELECT * FROM {table} LIMIT 0")
+        order = ", ".join(str(i + 1) for i in range(len(cols)))
+        out[table] = engine.query(f"SELECT * FROM {table} ORDER BY {order}")[1]
     return out
 
 
@@ -44,7 +46,8 @@ def test_counts_after_two_releases(loaded_engine: Engine) -> None:
         )
         == 0
     )
-    # 15 rows: one repeated SCV dropped at staging, one orphan VariationID dropped at load.
+    # 15 rows in the 2026-10 file: one repeated SCV is dropped at staging and one
+    # orphan VariationID at load, leaving 13.
     assert (
         loaded_engine.scalar(
             "SELECT count(*) FROM submission AS s INNER JOIN v_clinvar_release AS r"
@@ -109,10 +112,17 @@ def test_unload_restores_previous_release(empty_engine: Engine, fixture_paths: P
     load.load_clinvar(empty_engine, fixture_paths, "2025-10")
     before = snapshot(empty_engine)
     load.load_clinvar(empty_engine, fixture_paths, "2026-10")
+    # 2026-10 rewrote V3's transcript (NM_000546.6 -> .7) in place.
+    assert (
+        empty_engine.scalar("SELECT transcript FROM clinvar_variation WHERE variation_id = 1003")
+        == "NM_000546.7"
+    )
+    assert empty_engine.scalar("SELECT count(*) FROM clinvar_variation_history") == 1
     assert load.unload_latest_clinvar(empty_engine) == "2026-10"
     after = snapshot(empty_engine)
-    # Sequences are not rewound and variant keys stay, so compare release content.
-    # Submitters first seen in 2026-10 also stay; they are names, not assertions.
+    # Row for row, every table matches its state before 2026-10, except that the
+    # release row stays as 'rolled_back' and submitters first seen in 2026-10
+    # stay (they are names, not assertions).
     for key in ("submitter", "source_release"):
         after.pop(key)
         before.pop(key)
@@ -131,3 +141,9 @@ def test_changed_file_is_refused(empty_engine: Engine, fixture_paths: Paths) -> 
     empty_engine.execute("UPDATE provenance SET sha256 = repeat('0', 64)")
     with pytest.raises(load.LoadError, match="different files"):
         load.load_clinvar(empty_engine, fixture_paths, "2025-10")
+
+
+def test_mavedb_load_without_files_is_skipped(empty_engine: Engine, tmp_path: Path) -> None:
+    migrate(empty_engine)
+    assert load.load_mavedb(empty_engine, Paths(tmp_path)) is False
+    assert empty_engine.scalar("SELECT count(*) FROM score_set") == 0

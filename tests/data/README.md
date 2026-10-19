@@ -13,7 +13,7 @@ one GRCh37 and one GRCh38 row per variant; staging keeps GRCh38):
 | --- | --- | --- | --- | --- |
 | V1 1001 | BRCA1 | Uncertain significance | Likely pathogenic | reclassification VUS to P/LP |
 | V2 1002 | BRCA1 | Pathogenic, expert panel | same | unchanged, 3 stars |
-| V3 1003 | TP53 | Pathogenic | same | matched by gnomAD and MaveDB |
+| V3 1003 | TP53 | Pathogenic | same, Name cites NM_000546.7 | matched by gnomAD and MaveDB; the transcript change is an overwritten attribute that unload must restore |
 | V4 1004 | TP53 | Benign | Likely benign | new SCD version, same class |
 | V5 1005 | GENEX | Conflicting | same | conflicting aggregate record |
 | V6 1006 | GENEX | Likely benign | absent | variant removed from ClinVar |
@@ -29,13 +29,15 @@ first is kept) and SCV0000014 for VariationID 5555, which is not in
 variant_summary (dropped at load).
 
 `gnomad.joint.v4.1.FIXTURE.vcf`: joint AC, AN, AF and nhomalt for `all`,
-`afr` and `nfe` at V1 (AF 0.002 in afr, rare elsewhere), V3 (absent in afr)
-and V4 (AF 0.3, a common benign variant).
+`afr` and `nfe` at V1 (AF 0.002 in afr, rare elsewhere), V3 (absent in afr),
+V4 (AF 0.3, a common benign variant) and V2 with FILTER `EXOMES_FILTERED`
+(AF 0.01 in afr), which queries 04 and 05 must ignore.
 
 `00000097-0-2.*` (BRCA1, nucleotide matching): scores for V1, V2, V7 and one
 change with no ClinVar record. `00000068-0-1.*` (TP53, protein matching):
 p.Arg175His, p.Arg175Cys, p.Pro72Arg, p.Arg174=, p.Met1Ala with no ClinVar
-match, and row 6 with no HGVS at all.
+match, row 6 with no HGVS at all, and row 7 repeating p.Arg175His with a
+second score (-2.0 after -3.0; query 06 uses the mean, -2.5).
 
 `genes.json`: Ensembl GRCh38 coordinates for BRCA1 and TP53, the two panel
 genes in the fixtures.

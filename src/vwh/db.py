@@ -107,7 +107,9 @@ class PostgresEngine(Engine):
 
     @staticmethod
     def _pg(sql: str) -> str:
-        return sql.replace("?", "%s")
+        # psycopg reads % as a placeholder marker once parameters are passed,
+        # so a literal % (LIKE 'BRCA%') must be doubled first.
+        return sql.replace("%", "%%").replace("?", "%s")
 
     def execute(self, sql: str, params: Sequence[Any] | None = None) -> None:
         with self.con.cursor() as cur:

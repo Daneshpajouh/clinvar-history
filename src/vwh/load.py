@@ -195,6 +195,15 @@ def load_clinvar(
         # INSERT ... ON CONFLICT DO UPDATE over all rows ran for more than
         # five minutes on DuckDB; see docs/performance.md.
         changed = " OR ".join(f"cv.{c} IS DISTINCT FROM s.{c}" for c in VARIATION_COLS)
+        cols = ", ".join(VARIATION_COLS)
+        engine.execute(
+            f"INSERT INTO clinvar_variation_history (variation_id, replaced_by_release_id, {cols})"
+            " SELECT cv.variation_id, ?, "
+            + ", ".join(f"cv.{c}" for c in VARIATION_COLS)
+            + " FROM clinvar_variation AS cv INNER JOIN stg_variants AS s"
+            f" ON cv.variation_id = s.variation_id WHERE {changed}",
+            [rid],
+        )
         engine.execute(
             "UPDATE clinvar_variation AS cv SET "
             + ", ".join(f"{c} = s.{c}" for c in VARIATION_COLS)
@@ -274,7 +283,14 @@ def load_clinvar(
 
 
 def unload_latest_clinvar(engine: Engine) -> str | None:
-    """Roll back the most recent ClinVar release, restoring the SCD state before it."""
+    """Roll back the most recent ClinVar release in one transaction.
+
+    Removes its submissions, classification versions, new variations and
+    provenance, reopens the versions it closed, restores variation attributes
+    it overwrote from clinvar_variation_history, and marks the release row
+    rolled_back. Gene rows and variant keys it added stay, and gene symbols it
+    updated are not reverted.
+    """
     _, rows = engine.query("SELECT release_id, label FROM v_clinvar_release WHERE recency_rank = 1")
     if not rows:
         return None
@@ -289,6 +305,16 @@ def unload_latest_clinvar(engine: Engine) -> str | None:
             [rid],
         )
         engine.execute("DELETE FROM clinvar_variation WHERE first_release_id = ?", [rid])
+        engine.execute(
+            "UPDATE clinvar_variation AS cv SET "
+            + ", ".join(f"{c} = h.{c}" for c in VARIATION_COLS)
+            + " FROM clinvar_variation_history AS h"
+            " WHERE h.variation_id = cv.variation_id AND h.replaced_by_release_id = ?",
+            [rid],
+        )
+        engine.execute(
+            "DELETE FROM clinvar_variation_history WHERE replaced_by_release_id = ?", [rid]
+        )
         # variant rows stay: they are allele keys, not release data, and DuckDB
         # rejects deleting a parent row in the transaction that deleted its child.
         engine.execute("DELETE FROM provenance WHERE release_id = ?", [rid])
@@ -368,6 +394,11 @@ def load_gnomad(engine: Engine, paths: Paths, release: str) -> bool:
 
 def load_mavedb(engine: Engine, paths: Paths) -> bool:
     files = [r for r in read_manifest(paths) if r["source"] == "mavedb"]
+    if not files:
+        log.warning("no MaveDB files in the manifest, skipping", extra={"source": "mavedb"})
+        return False
+    # MaveDB has no release numbers; a load replaces the score sets it names
+    # and keeps no history of earlier fetches.
     label = max(r["fetched_at"][:10] for r in files)
     if _already_loaded(engine, "mavedb", label, files):
         return False

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "variant-warehouse"
 version = "1.0.1"
-description = "SQL-first variant knowledge warehouse for ClinVar, gnomAD, MaveDB, ENCODE and HPRC data on DuckDB and PostgreSQL"
+description = "Versioned SQL database of ClinVar releases, gnomAD v4.1 frequencies and MaveDB scores on DuckDB and PostgreSQL"
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
@@ -24,6 +24,8 @@ dependencies = [
   "rich>=13",
   "pyyaml>=6",
   "jsonschema>=4.20",
+  # DuckDB needs pytz to return TIMESTAMP WITH TIME ZONE values to Python.
+  "pytz",
 ]
 
 [project.optional-dependencies]
@@ -36,6 +38,7 @@ dev = [
   "sqlfluff>=3",
   "types-PyYAML",
   "types-jsonschema",
+  "types-pytz",
 ]
 docs = ["mkdocs>=1.6", "mkdocs-material>=9.5"]
 
