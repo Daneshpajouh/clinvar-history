@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from clinvar_history import db
 from clinvar_history.db import Engine, migrate, migration_files
 
 
@@ -28,6 +29,14 @@ def test_loader_role_can_write_every_table(empty_engine: Engine) -> None:
         "'clinvar_history_loader', quote_ident(table_name), 'INSERT')"
     )
     assert [r[0] for r in rows] == []
+
+
+def test_missing_migrations_folder_is_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(db, "MIGRATIONS_DIR", tmp_path)
+    with pytest.raises(FileNotFoundError, match="pip install -e"):
+        migration_files("duckdb")
 
 
 def test_migrate_twice_applies_nothing_new(empty_engine: Engine) -> None:

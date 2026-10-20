@@ -123,6 +123,10 @@ Design notes:
   exceeds btree version 4 maximum 2704"; the full load itself has not been
   run. The PostgreSQL path is tested on fixtures and benchmarked on a flat
   4.56 million-row table. `ROADMAP.md` item 1 replaces the key.
+- Install from a checkout with `pip install -e`: the package reads
+  `config/`, `migrations/`, `sql/` and `workflow/schemas/` from the
+  repository, and a wheel install carries none of them (`migrate()` then
+  stops with an error).
 - gnomAD covers the ten panel genes and MaveDB seven of them; ClinVar is
   genome-wide. A MaveDB load replaces the score sets it names and keeps no
   history of earlier fetches.

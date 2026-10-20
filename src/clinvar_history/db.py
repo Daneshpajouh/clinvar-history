@@ -163,6 +163,11 @@ def migration_files(engine_name: str) -> list[Path]:
             raise ValueError(f"bad migration file name: {path.name}")
         if m.group(2) in (None, engine_name):
             files.append(path)
+    if not files:
+        # a wheel install carries no migrations/; migrate() would then apply nothing
+        raise FileNotFoundError(
+            f"no migrations in {MIGRATIONS_DIR}; install from a checkout with pip install -e"
+        )
     return files
 
 
