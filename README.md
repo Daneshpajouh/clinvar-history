@@ -91,10 +91,10 @@ All 18 validation checks passed (`docs/validation.md`); query output is in
   bench, dictionary). Staging uses polars; loading is SQL.
 - `sql/queries/`: eight cookbook queries, each tested on fixtures on both
   engines.
-- `tests/`: unit tests for every parsing rule, the cookbook tests, and the
+- `tests/`: parsing tests, the cookbook tests, and the
   interrupted-refresh drill. Fixtures are hand-written in `tests/data`.
-- `docs/`: ER diagram, data dictionary, refresh SOP, code walk-through,
-  testing, logging, performance, operations runbook and a postmortem.
+- `docs/`: ER diagram, data dictionary, refresh SOP, testing, logging,
+  performance, operations runbook and the postmortem of the 2026-10-19 build.
 
 Design notes:
 
@@ -106,6 +106,11 @@ Design notes:
   analysts see. `clinvar-history unload` removes the latest release and writes back the
   variation attributes it overwrote; on the full build it restored the 4,212
   overwritten rows (0 rows differing from the 2025-10 staging) in 261 s.
+- Engine differences stay in `db.py` (parameter style, Parquet staging
+  through COPY on PostgreSQL) and the `.postgres.sql` migrations. The
+  queries use only SQL both engines accept: CTEs, window functions with a
+  named `WINDOW`, `percentile_cont ... WITHIN GROUP`, `IS DISTINCT FROM`
+  and `UPDATE ... FROM`.
 - ClinVar and gnomAD join on the GRCh38 key `chrom-pos-ref-alt` built from
   their VCF columns. Both are GRCh38 and left-aligned; there is no liftover
   anywhere in the warehouse.

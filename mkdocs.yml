@@ -18,7 +18,6 @@ nav:
   - ER diagram: er_diagram.md
   - Data dictionary: data_dictionary.md
   - Data sources: data_sources.md
-  - Code walk-through: code_walkthrough.md
   - Monthly refresh SOP: sop_monthly_refresh.md
   - Validation report: validation.md
   - Results: results.md
@@ -27,5 +26,4 @@ nav:
   - Logging: logging.md
   - Operations:
       - Runbook: operations/runbook.md
-      - Postmortem template: operations/postmortem_template.md
       - "2026-10-19 build failures": operations/postmortems/2026-10-19-clinvar-refresh-build.md
