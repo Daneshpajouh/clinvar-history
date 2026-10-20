@@ -1,6 +1,6 @@
 # Testing
 
-Three layers, each with one command.
+Four layers, each with one command.
 
 | Layer | What it checks | Command |
 | --- | --- | --- |
@@ -14,8 +14,8 @@ is described in `tests/data/README.md`, and the expected query results sit
 next to the assertions in `tests/test_queries.py`.
 
 The load and SQL layers run once per engine. Without `CLINVAR_HISTORY_PG_DSN` they run
-on an in-memory DuckDB; with it they run again on PostgreSQL, each test
-module in its own schema:
+on an in-memory DuckDB; with it they run again on PostgreSQL, in two schemas: one for the tests
+that start from an empty database and one for the loaded fixtures:
 
 ```
 docker compose up -d db

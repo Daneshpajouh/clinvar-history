@@ -86,7 +86,7 @@ All 18 validation checks passed (`docs/validation.md`); query output is in
 - `migrations/`: numbered SQL files applied in order and recorded with their
   SHA-256 in `schema_migrations`; an edited, already-applied file stops the
   run. Files ending `.postgres.sql` hold the foreign keys DuckDB cannot keep
-  and the read-only analyst role.
+  and the analyst and loader roles.
 - `src/clinvar_history/`: the `clinvar-history` command (fetch, stage, load, unload, validate, query,
   bench, dictionary). Staging uses polars; loading is SQL.
 - `sql/queries/`: eight cookbook queries, each tested on fixtures on both

@@ -195,8 +195,8 @@ def load_clinvar(
         step_hook("variant")
         # Update only rows whose attributes changed (4,212 of 3.7 million
         # between 2025-10 and 2026-10), then insert new variations. An
-        # INSERT ... ON CONFLICT DO UPDATE over all rows ran for more than
-        # five minutes on DuckDB; see docs/performance.md.
+        # INSERT ... ON CONFLICT DO UPDATE over all rows took 295 s on
+        # DuckDB; see docs/performance.md.
         changed = " OR ".join(f"cv.{c} IS DISTINCT FROM s.{c}" for c in VARIATION_COLS)
         cols = ", ".join(VARIATION_COLS)
         engine.execute(
