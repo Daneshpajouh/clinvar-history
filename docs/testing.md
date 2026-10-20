@@ -22,8 +22,9 @@ docker compose up -d db
 CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history .venv/bin/pytest -q --cov=clinvar_history
 ```
 
-Run on 2026-10-19 (macOS, PostgreSQL 17.6): 85 passed, 92% line coverage
-(60 tests without `CLINVAR_HISTORY_PG_DSN`).
+Run on 2026-10-19 (macOS, PostgreSQL 17.6): 89 passed and 1 skipped, 92% line
+coverage (62 passed and 1 skipped without `CLINVAR_HISTORY_PG_DSN`; the skipped
+test checks the PostgreSQL roles).
 
 | Module | Coverage |
 | --- | ---: |

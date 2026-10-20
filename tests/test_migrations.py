@@ -25,8 +25,9 @@ def test_loader_role_can_write_every_table(empty_engine: Engine) -> None:
     _, rows = empty_engine.query(
         "SELECT table_name FROM information_schema.tables"
         " WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'"
+        # schema-qualified: PostgreSQL may test the privilege before it applies the schema filter
         " AND NOT has_table_privilege("
-        "'clinvar_history_loader', quote_ident(table_name), 'INSERT')"
+        "'clinvar_history_loader', format('%I.%I', table_schema, table_name), 'INSERT')"
     )
     assert [r[0] for r in rows] == []
 
