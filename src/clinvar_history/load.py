@@ -87,10 +87,12 @@ def _already_loaded(engine: Engine, source: str, label: str, files: list[dict[st
         return False
     wanted = {f["path"]: f["sha256"] for f in files}
     if wanted and wanted != recorded:
-        raise LoadError(
-            f"{source} {label} is loaded from different files; "
-            f"run 'clinvar-history unload {source}' first"
-        )
+        if source == "clinvar":
+            hint = "run 'clinvar-history unload clinvar' first"
+        else:
+            # unload handles only the latest ClinVar release (cli.unload)
+            hint = "put back the files it was loaded from, or rebuild the database"
+        raise LoadError(f"{source} {label} is loaded from different files; {hint}")
     log.info("already loaded, skipping", extra={"source": source, "release": label})
     return True
 

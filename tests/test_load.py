@@ -143,6 +143,21 @@ def test_changed_file_is_refused(empty_engine: Engine, fixture_paths: Paths) -> 
         load.load_clinvar(empty_engine, fixture_paths, "2025-10")
 
 
+def test_changed_gnomad_file_is_refused_without_a_missing_command(
+    empty_engine: Engine, fixture_paths: Paths
+) -> None:
+    # unload works only for the latest ClinVar release, so the message must not offer it
+    migrate(empty_engine)
+    for release in ("2025-10", "2026-10"):
+        load.load_clinvar(empty_engine, fixture_paths, release)
+    load.load_panel(empty_engine, fixture_paths)
+    load.load_gnomad(empty_engine, fixture_paths, "4.1")
+    empty_engine.execute("UPDATE provenance SET sha256 = repeat('0', 64)")
+    with pytest.raises(load.LoadError, match="different files") as refused:
+        load.load_gnomad(empty_engine, fixture_paths, "4.1")
+    assert "unload" not in str(refused.value)
+
+
 def test_mavedb_load_without_files_is_skipped(empty_engine: Engine, tmp_path: Path) -> None:
     migrate(empty_engine)
     assert load.load_mavedb(empty_engine, Paths(tmp_path)) is False
