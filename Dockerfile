@@ -8,12 +8,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY src ./src
-COPY migrations ./migrations
-COPY sql ./sql
-COPY config ./config
-COPY workflow/schemas ./workflow/schemas
 COPY tests ./tests
-# Editable install keeps migrations/ and sql/ at the paths the package reads them from.
 RUN pip install --no-cache-dir -e ".[postgres,dev]"
 
 ENV CLINVAR_HISTORY_DATA_DIR=/data

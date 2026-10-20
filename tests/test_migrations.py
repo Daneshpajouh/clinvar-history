@@ -36,7 +36,7 @@ def test_missing_migrations_folder_is_an_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(db, "MIGRATIONS_DIR", tmp_path)
-    with pytest.raises(FileNotFoundError, match="pip install -e"):
+    with pytest.raises(FileNotFoundError, match="the package is incomplete"):
         migration_files("duckdb")
 
 

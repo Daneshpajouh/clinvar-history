@@ -24,7 +24,7 @@ erDiagram
 
 Solid lines are foreign keys. On DuckDB the two keys into
 `clinvar_variation` from `classification` and `submission` are checked by
-`clinvar-history validate` instead (see `migrations/0004_foreign_keys.postgres.sql`).
+`clinvar-history validate` instead (see `src/clinvar_history/migrations/0004_foreign_keys.postgres.sql`).
 The dotted line is the MaveDB join, which is a text match, not a key: a
 nucleotide score set matches the transcript and c. change with the transcript
 version dropped, a protein score set matches gene and p. change.

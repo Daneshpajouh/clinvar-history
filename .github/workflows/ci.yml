@@ -33,8 +33,23 @@ jobs:
       - run: ruff check src tests
       - run: ruff format --check src tests
       - run: mypy
-      - run: sqlfluff lint migrations sql
+      - run: sqlfluff lint src/clinvar_history/migrations src/clinvar_history/sql
       - run: pytest --cov=clinvar_history --cov-report=term
+
+  wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip wheel --no-deps --wheel-dir dist .
+      - name: Install the wheel in a fresh environment outside the checkout
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-env"
+          "$RUNNER_TEMP/wheel-env/bin/pip" install dist/clinvar_history-*.whl pytest
+      # From the checkout root, src/ is not on sys.path, so the package comes from the wheel.
+      - run: '"$RUNNER_TEMP/wheel-env/bin/python" -m tests.wheel_smoke'
 
   image:
     runs-on: ubuntu-latest

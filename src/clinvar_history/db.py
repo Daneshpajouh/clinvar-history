@@ -13,11 +13,11 @@ import duckdb
 import pyarrow.csv as pacsv
 import pyarrow.parquet as pq
 
-from clinvar_history.config import REPO_ROOT
+from clinvar_history.config import PACKAGE_DATA
 from clinvar_history.logs import get_logger
 
 log = get_logger(__name__)
-MIGRATIONS_DIR = REPO_ROOT / "migrations"
+MIGRATIONS_DIR = PACKAGE_DATA / "migrations"
 _MIGRATION_RE = re.compile(r"^(\d{4})_[a-z0-9_]+(?:\.(duckdb|postgres))?\.sql$")
 
 Rows = list[tuple[Any, ...]]
@@ -164,10 +164,8 @@ def migration_files(engine_name: str) -> list[Path]:
         if m.group(2) in (None, engine_name):
             files.append(path)
     if not files:
-        # a wheel install carries no migrations/; migrate() would then apply nothing
-        raise FileNotFoundError(
-            f"no migrations in {MIGRATIONS_DIR}; install from a checkout with pip install -e"
-        )
+        # with no files, migrate() would apply nothing and report success
+        raise FileNotFoundError(f"no migrations in {MIGRATIONS_DIR}; the package is incomplete")
     return files
 
 

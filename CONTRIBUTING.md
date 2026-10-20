@@ -4,7 +4,7 @@ Set up with `python3 -m venv .venv && .venv/bin/pip install -e ".[postgres,dev]"
 then `make check` runs what CI runs: ruff (line length 100), ruff format,
 mypy in strict mode, sqlfluff and pytest.
 
-- Schema changes go in a new numbered file in `migrations/`. Never edit an
+- Schema changes go in a new numbered file in `src/clinvar_history/migrations/`. Never edit an
   applied migration; the runner refuses it.
 - A new cookbook query needs a fixture row that exercises it and a test in
   `tests/test_queries.py` with the exact expected rows.

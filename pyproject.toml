@@ -49,7 +49,13 @@ clinvar-history = "clinvar_history.cli:app"
 where = ["src"]
 
 [tool.setuptools.package-data]
-clinvar_history = ["py.typed"]
+clinvar_history = [
+  "py.typed",
+  "migrations/*.sql",
+  "sql/queries/*.sql",
+  "defaults/*.yaml",
+  "schemas/*.json",
+]
 
 [tool.ruff]
 line-length = 100

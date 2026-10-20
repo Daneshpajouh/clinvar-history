@@ -32,13 +32,13 @@ pytest -q
 ```
 
 ```
-62 passed, 1 skipped in 2.85s
+65 passed, 1 skipped in 2.82s
 ```
 
 With a PostgreSQL server the same suite runs a second time against it
 (`docker compose up -d db`, then
-`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 89 passed and
-1 skipped in 6.39 s).
+`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 92 passed and
+1 skipped in 5.12 s).
 The Docker image carries the tests too:
 `docker build -t clinvar-history:1.0.2 .` then
 `docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.2 -m pytest -q`
@@ -83,14 +83,16 @@ All 18 validation checks passed (`docs/validation.md`); query output is in
 
 ## What is in it
 
-- `migrations/`: numbered SQL files applied in order and recorded with their
+- `src/clinvar_history/migrations/`: numbered SQL files applied in order and recorded with their
   SHA-256 in `schema_migrations`; an edited, already-applied file stops the
   run. Files ending `.postgres.sql` hold the foreign keys DuckDB cannot keep
   and the analyst and loader roles.
 - `src/clinvar_history/`: the `clinvar-history` command (fetch, stage, load, unload, validate, query,
   bench, dictionary). Staging uses polars; loading is SQL.
-- `sql/queries/`: eight cookbook queries, each tested on fixtures on both
-  engines.
+- `src/clinvar_history/sql/queries/`: eight cookbook queries, each tested on fixtures on both
+  engines. The migrations, the queries, the default config
+  (`src/clinvar_history/defaults/config.yaml`) and its schema ship inside the
+  package, so a wheel install has them too.
 - `tests/`: parsing tests, the cookbook tests, and the
   interrupted-refresh drill. Fixtures are hand-written in `tests/data`.
 - `docs/`: ER diagram, data dictionary, refresh SOP, testing, logging,
@@ -123,16 +125,12 @@ Design notes:
   exceeds btree version 4 maximum 2704"; the full load itself has not been
   run. The PostgreSQL path is tested on fixtures and benchmarked on a flat
   4.56 million-row table. `ROADMAP.md` item 1 replaces the key.
-- Install from a checkout with `pip install -e`: the package reads
-  `config/`, `migrations/`, `sql/` and `workflow/schemas/` from the
-  repository, and a wheel install carries none of them (`migrate()` then
-  stops with an error).
 - gnomAD covers the ten panel genes and MaveDB seven of them; ClinVar is
   genome-wide. A MaveDB load replaces the score sets it names and keeps no
   history of earlier fetches.
 - MaveDB protein-level matches use only ClinVar records with at least one
   star and class P/LP or B/LB, and need all of them to agree; see
-  `sql/queries/06_mave_concordance.sql`.
+  `src/clinvar_history/sql/queries/06_mave_concordance.sql`.
 
 Licence: Apache-2.0 for the code. Each data source has its own terms,
 listed in `docs/data_sources.md`.

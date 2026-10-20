@@ -10,7 +10,7 @@ lint:
 	$(PY) -m ruff check src tests
 	$(PY) -m ruff format --check src tests
 	$(PY) -m mypy
-	.venv/bin/sqlfluff lint migrations sql
+	.venv/bin/sqlfluff lint src/clinvar_history/migrations src/clinvar_history/sql
 
 test:
 	$(PY) -m pytest -q

@@ -6,7 +6,9 @@ month (2026-10 files are dated 2026-10-01). The steps below add one release.
 Run them as the loader account; analysts keep reading the previous release
 until step 5 commits.
 
-1. Add the release to `config/config.yaml`, for example
+1. Add the release to the build config (in a checkout,
+   `src/clinvar_history/defaults/config.yaml`; otherwise a copy of it passed
+   with `--config`), for example
    `releases: ["2025-10", "2026-10", "2026-11"]`. Releases load oldest first;
    the loader refuses a release older than one already loaded.
 2. Fetch: `clinvar-history --log-file refresh.jsonl fetch clinvar --release 2026-11`.
