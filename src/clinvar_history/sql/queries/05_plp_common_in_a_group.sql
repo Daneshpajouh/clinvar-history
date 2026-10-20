@@ -25,7 +25,7 @@ ranked AS (
             PARTITION BY v.variant_key ORDER BY pf.af DESC, pf.ancestry_group
         ) AS rn
     FROM v_variant_current AS v
-    INNER JOIN population_frequency AS pf ON v.variant_key = pf.variant_key
+    INNER JOIN population_frequency AS pf ON md5(v.variant_key) = pf.variant_key_md5
     INNER JOIN gnomad_latest AS g ON pf.release_id = g.release_id
     WHERE
         v.in_panel

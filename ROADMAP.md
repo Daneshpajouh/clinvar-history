@@ -5,7 +5,9 @@
    load completes, `clinvar-history validate --dsn` passes, and `variant_key` no longer
    relies on a B-tree that rejects keys over 2,704 bytes (plan: a
    generated `md5(variant_key)` unique column, with a hash index on the
-   key for lookups), measured in `docs/performance.md`.
+   key for lookups), measured in `docs/performance.md`. Done on 2026-10-20
+   (#1): both releases loaded and validated on PostgreSQL 17.6, with
+   migration 0008 keying `variant` by `variant_key_md5`.
 2. Snakemake workflow for the monthly refresh. As an operator, I add a
    release to the config and run one command. Done when the workflow
    chains fetch, stage, load, validate and report with per-rule logs and

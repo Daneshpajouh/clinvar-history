@@ -9,8 +9,8 @@ erDiagram
     source_release ||--o{ score_set : "fetched in"
     gene ||--o{ clinvar_variation : "gene_id"
     gene ||--o{ score_set : "gene_id"
-    variant ||--o{ clinvar_variation : "variant_key"
-    variant ||--o{ population_frequency : "variant_key"
+    variant ||--o{ clinvar_variation : "variant_key_md5"
+    variant ||--o{ population_frequency : "variant_key_md5"
     clinvar_variation ||--o{ classification : "variation_id"
     clinvar_variation ||--o{ submission : "variation_id"
     clinvar_variation ||--o{ clinvar_variation_history : "variation_id"
@@ -34,7 +34,10 @@ Keys:
 - `variant.variant_key`: GRCh38 `chrom-pos-ref-alt` from ClinVar's
   PositionVCF/ReferenceAlleleVCF/AlternateAlleleVCF and gnomAD's VCF columns.
   ClinVar records without VCF alleles (copy number changes, for example) have
-  a `clinvar_variation` row with a null key.
+  a `clinvar_variation` row with a null key. The primary key and the foreign
+  keys use `variant_key_md5`, the md5 of this text, because a PostgreSQL
+  B-tree cannot hold the longest alleles (migration 0008); a CHECK on each
+  table refuses a digest that does not match its key.
 - `clinvar_variation.variation_id`: ClinVar VariationID. `allele_id` is kept
   but is not unique across releases: 65 AlleleIDs moved to a new VariationID
   between 2025-10 and 2026-10.

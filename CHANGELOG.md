@@ -6,6 +6,18 @@ The format follows Keep a Changelog; versions follow Semantic Versioning.
 
 ### Fixed
 
+- PostgreSQL: a record whose `variant_key` passed the B-tree row limit of
+  2,704 bytes stopped the load at the primary key. Migration 0008 keys
+  `variant` by `variant_key_md5`, the md5 of the key, on both engines;
+  `clinvar_variation` and `population_frequency` carry the digest for their
+  foreign keys, a CHECK on each table ties it to the key, and PostgreSQL gets
+  a hash index on `variant_key` for lookups. DuckDB rebuilds the three
+  tables, because it cannot change a primary key in place. Cookbook query
+  05 joins `population_frequency` on the digest, which leads its primary
+  key, and the data dictionary lists the digest columns. A full load of
+  both ClinVar releases with gnomAD and MaveDB now completes on PostgreSQL
+  17.6 and passes all 18 validation checks; the README and
+  `docs/performance.md` give the times (#1).
 - A wheel install now works: the migrations, the cookbook queries, the
   default config and its schema moved into `src/clinvar_history/` and are
   read through `importlib.resources`. Before, the package read them from the

@@ -79,5 +79,11 @@ Some ClinVar alleles are kilobases long, and the key carries both alleles.
 The benchmark uses a hash index, which stores a 4-byte hash and serves
 equality lookups (0.48 ms). The warehouse's primary key on
 `variant.variant_key` is a B-tree on the same values, so a full PostgreSQL
-load is expected to fail the same way; that load has not been run.
-`ROADMAP.md` milestone 1 covers it.
+load was expected to fail the same way. Migration 0008 moved the primary
+key and the foreign keys to `variant_key_md5`, the md5 of the key (32
+characters), and added a hash index on `variant_key` for lookups by the
+text. The full load on PostgreSQL then ran on 2026-10-20 (PostgreSQL 17.6
+in the compose container, Apple M3 Ultra, 96 GB): 375.0 s for the 2025-10
+release and 795.1 s for the 2026-10 release with gnomAD and MaveDB, with a
+loader peak memory footprint of 3.78 GB and 4.44 GB. The longest
+`variant_key` loaded is 19,111 bytes, and all 18 validation checks passed.

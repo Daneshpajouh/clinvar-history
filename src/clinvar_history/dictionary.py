@@ -18,7 +18,8 @@ TABLES = {
     "gene": "NCBI Gene IDs seen in ClinVar; panel genes carry Ensembl GRCh38 coordinates.",
     "variant": (
         "GRCh38 alleles keyed chrom-pos-ref-alt with VCF"
-        " left-aligned alleles, shared by ClinVar and gnomAD."
+        " left-aligned alleles, shared by ClinVar and gnomAD. The primary key is"
+        " variant_key_md5, the MD5 of variant_key, as long alleles pass the B-tree row limit."
     ),
     "clinvar_variation": (
         "ClinVar VariationID with its AlleleID, HGVS parts and match"

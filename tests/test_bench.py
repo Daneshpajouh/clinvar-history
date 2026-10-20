@@ -73,5 +73,6 @@ def test_dictionary_lists_every_table_with_row_counts(file_warehouse: Paths) -> 
     for table in TABLES:
         assert f"## {table}\n" in text
     assert "| variant_key | VARCHAR | no |" in text
+    assert "| variant_key_md5 | VARCHAR | no |" in text
     # 10 ClinVar variations in the fixtures, one per line in variant_summary
     assert "Rows in the build described in the README: 10." in text

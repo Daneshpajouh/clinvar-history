@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -72,3 +73,44 @@ def test_empty_string_and_null_survive_staging(empty_engine: Engine, tmp_path: P
     assert empty_engine.stage_parquet("stg_t", path) == 3
     _, got = empty_engine.query("SELECT s, n FROM stg_t ORDER BY n NULLS LAST, s")
     assert got == [("", 1), ("x", 3), (None, None)]
+
+
+def test_0008_keys_existing_rows_by_digest(
+    empty_engine: Engine, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Upgrade a warehouse that 0001 to 0007 built and that already holds rows.
+    for path in sorted(db.MIGRATIONS_DIR.glob("*.sql")):
+        if path.name < "0008":
+            (tmp_path / path.name).write_text(path.read_text())
+    monkeypatch.setattr(db, "MIGRATIONS_DIR", tmp_path)
+    migrate(empty_engine)
+    key = "17-43045712-G-A"
+    for sql in (
+        "INSERT INTO source_release (label, source, status) VALUES ('4.1', 'gnomad', 'loaded')",
+        f"INSERT INTO variant VALUES ('{key}', '17', 43045712, 'G', 'A', 'snv')",
+        "INSERT INTO clinvar_variation (variation_id, allele_id, variant_key, variant_type,"
+        f" first_release_id) VALUES (55, 66, '{key}', 'single nucleotide variant', 1)",
+        "INSERT INTO clinvar_variation (variation_id, allele_id, variant_type, first_release_id)"
+        " VALUES (56, 67, 'Deletion', 1)",
+        "INSERT INTO population_frequency (variant_key, release_id, ancestry_group, ac, an,"
+        f" filter) VALUES ('{key}', 1, 'all', 1, 10, 'PASS')",
+    ):
+        empty_engine.execute(sql)
+    monkeypatch.undo()
+    assert [p.startswith("0008_") for p in migrate(empty_engine)] == [True]
+    digest = hashlib.md5(key.encode()).hexdigest()
+    for table, want in (
+        ("variant", [(digest,)]),
+        ("clinvar_variation", [(digest,), (None,)]),
+        ("population_frequency", [(digest,)]),
+    ):
+        got = empty_engine.query(f"SELECT variant_key_md5 FROM {table} ORDER BY 1 NULLS LAST")[1]
+        assert got == want, table
+    # the digest must match its key, and a child must name a known variant
+    for bad in (
+        "INSERT INTO variant VALUES ('1-1-A-C', '1', 1, 'A', 'C', 'snv', 'x')",
+        "INSERT INTO population_frequency VALUES"
+        " ('1-1-A-C', 1, 'all', 1, 10, NULL, NULL, 'PASS', md5('1-1-A-C'))",
+    ):
+        with pytest.raises(Exception, match=r"(?i)constraint|violat"):
+            empty_engine.execute(bad)

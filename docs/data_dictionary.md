@@ -68,7 +68,7 @@ NCBI Gene IDs seen in ClinVar; panel genes carry Ensembl GRCh38 coordinates. Row
 
 ## variant
 
-GRCh38 alleles keyed chrom-pos-ref-alt with VCF left-aligned alleles, shared by ClinVar and gnomAD. Rows in the build described in the README: 4,919,816.
+GRCh38 alleles keyed chrom-pos-ref-alt with VCF left-aligned alleles, shared by ClinVar and gnomAD. The primary key is variant_key_md5, the MD5 of variant_key, as long alleles pass the B-tree row limit. Rows in the build described in the README: 4,919,816.
 
 | Column | Type | Nullable |
 | --- | --- | --- |
@@ -78,6 +78,7 @@ GRCh38 alleles keyed chrom-pos-ref-alt with VCF left-aligned alleles, shared by 
 | ref | VARCHAR | no |
 | alt | VARCHAR | no |
 | variant_class | VARCHAR | no |
+| variant_key_md5 | VARCHAR | no |
 
 ## clinvar_variation
 
@@ -97,6 +98,7 @@ ClinVar VariationID with its AlleleID, HGVS parts and match keys; attributes fro
 | hgvs_c_key | VARCHAR | yes |
 | hgvs_p_key | VARCHAR | yes |
 | first_release_id | INTEGER | no |
+| variant_key_md5 | VARCHAR | yes |
 
 ## clinvar_variation_history
 
@@ -175,6 +177,7 @@ gnomAD v4.1 joint allele counts per variant and ancestry group. Rows in the buil
 | af | DOUBLE | yes |
 | nhomalt | INTEGER | yes |
 | filter | VARCHAR | no |
+| variant_key_md5 | VARCHAR | no |
 
 ## score_set
 

@@ -38,6 +38,9 @@ VARIATION_COLS = [
     "hgvs_c_key",
     "hgvs_p_key",
 ]
+# Keys and foreign keys use the digest, not the allele text (migration 0008),
+# so it is written beside variant_key everywhere a row is written.
+KEY_MD5 = "variant_key_md5 = md5({t}.variant_key)"
 
 
 class LoadError(RuntimeError):
@@ -188,9 +191,11 @@ def load_clinvar(
             " hgnc_id = excluded.hgnc_id"
         )
         engine.execute(
-            "INSERT INTO variant (variant_key, chrom, pos, ref, alt, variant_class)"
-            " SELECT DISTINCT variant_key, chrom, pos, ref, alt, variant_class FROM stg_variants"
-            " WHERE variant_key IS NOT NULL ON CONFLICT (variant_key) DO NOTHING"
+            "INSERT INTO variant"
+            " (variant_key_md5, variant_key, chrom, pos, ref, alt, variant_class)"
+            " SELECT DISTINCT md5(variant_key), variant_key, chrom, pos, ref, alt, variant_class"
+            " FROM stg_variants WHERE variant_key IS NOT NULL"
+            " ON CONFLICT (variant_key_md5) DO NOTHING"
         )
         step_hook("variant")
         # Update only rows whose attributes changed (4,212 of 3.7 million
@@ -210,13 +215,15 @@ def load_clinvar(
         engine.execute(
             "UPDATE clinvar_variation AS cv SET "
             + ", ".join(f"{c} = s.{c}" for c in VARIATION_COLS)
+            + ", "
+            + KEY_MD5.format(t="s")
             + f" FROM stg_variants AS s WHERE cv.variation_id = s.variation_id AND ({changed})"
         )
         engine.execute(
             f"INSERT INTO clinvar_variation (variation_id, {', '.join(VARIATION_COLS)},"
-            " first_release_id) SELECT s.variation_id, "
+            " first_release_id, variant_key_md5) SELECT s.variation_id, "
             + ", ".join(f"s.{c}" for c in VARIATION_COLS)
-            + ", ? FROM stg_variants AS s WHERE NOT EXISTS ("
+            + ", ?, md5(s.variant_key) FROM stg_variants AS s WHERE NOT EXISTS ("
             " SELECT 1 FROM clinvar_variation AS cv WHERE cv.variation_id = s.variation_id)",
             [rid],
         )
@@ -311,6 +318,8 @@ def unload_latest_clinvar(engine: Engine) -> str | None:
         engine.execute(
             "UPDATE clinvar_variation AS cv SET "
             + ", ".join(f"{c} = h.{c}" for c in VARIATION_COLS)
+            + ", "
+            + KEY_MD5.format(t="h")
             + " FROM clinvar_variation_history AS h"
             " WHERE h.variation_id = cv.variation_id AND h.replaced_by_release_id = ?",
             [rid],
@@ -366,19 +375,20 @@ def load_gnomad(engine: Engine, paths: Paths, release: str) -> bool:
     def body() -> None:
         rid = _new_release(engine, "gnomad", release, None)
         engine.execute(
-            "INSERT INTO variant (variant_key, chrom, pos, ref, alt, variant_class)"
-            " SELECT DISTINCT variant_key, chrom, pos, ref, alt,"
+            "INSERT INTO variant"
+            " (variant_key_md5, variant_key, chrom, pos, ref, alt, variant_class)"
+            " SELECT DISTINCT md5(variant_key), variant_key, chrom, pos, ref, alt,"
             "  CASE WHEN length(ref) = 1 AND length(alt) = 1 THEN 'snv'"
             "   WHEN length(ref) = length(alt) THEN 'mnv'"
             "   WHEN length(ref) = 1 AND substr(alt, 1, 1) = ref THEN 'insertion'"
             "   WHEN length(alt) = 1 AND substr(ref, 1, 1) = alt THEN 'deletion'"
             "   ELSE 'delins' END"
-            " FROM stg_freq ON CONFLICT (variant_key) DO NOTHING"
+            " FROM stg_freq ON CONFLICT (variant_key_md5) DO NOTHING"
         )
         engine.execute(
             "INSERT INTO population_frequency (variant_key, release_id, ancestry_group, ac, an, af,"
-            " nhomalt, filter) SELECT variant_key, ?, ancestry_group, ac, an, af, nhomalt, filter"
-            " FROM stg_freq",
+            " nhomalt, filter, variant_key_md5) SELECT variant_key, ?, ancestry_group, ac, an, af,"
+            " nhomalt, filter, md5(variant_key) FROM stg_freq",
             [rid],
         )
         loaded = int(

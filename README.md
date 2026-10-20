@@ -4,9 +4,8 @@ A versioned SQL database of human variant interpretations built from public
 releases: ClinVar (two monthly releases, genome-wide), gnomAD v4.1 allele
 frequencies for ten hereditary cancer genes, and MaveDB functional scores
 (eight score sets covering seven of those genes). It runs on DuckDB for a
-single analyst. The same migrations and queries pass the test suite on
-PostgreSQL, but a full PostgreSQL load is blocked by one primary key (see
-Limits).
+single analyst, and the same migrations, queries and full load run on
+PostgreSQL (both measured under Full build).
 
 ## Why
 
@@ -32,13 +31,13 @@ pytest -q
 ```
 
 ```
-65 passed, 1 skipped in 2.82s
+68 passed, 1 skipped in 3.23s
 ```
 
 With a PostgreSQL server the same suite runs a second time against it
 (`docker compose up -d db`, then
-`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 92 passed and
-1 skipped in 5.12 s).
+`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 98 passed and
+1 skipped in 6.51 s).
 The Docker image carries the tests too:
 `docker build -t clinvar-history:1.0.2 .` then
 `docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.2 -m pytest -q`
@@ -58,7 +57,7 @@ and about 6 GB free in the data directory: 1.60 GB of raw files,
 export CLINVAR_HISTORY_DATA_DIR=/path/with/6GB/free
 clinvar-history fetch genes && clinvar-history fetch clinvar && clinvar-history fetch gnomad && clinvar-history fetch mavedb
 clinvar-history stage clinvar && clinvar-history stage gnomad && clinvar-history stage mavedb
-clinvar-history load            # --dsn postgresql://... for PostgreSQL; a full load fails there (Limits)
+clinvar-history load            # add --dsn postgresql://... for PostgreSQL
 clinvar-history validate
 clinvar-history query 03        # reclassifications between the two releases
 ```
@@ -80,6 +79,17 @@ DuckDB file.
 
 All 18 validation checks passed (`docs/validation.md`); query output is in
 `docs/results.md`.
+
+The same build on PostgreSQL 17.6 (the compose `db` container, same machine,
+data directory on an external SSD), measured on 2026-10-20 with
+`clinvar-history load --dsn ...`: the 2025-10 release took 375.0 s wall time
+and loaded 3,708,788 `variant_summary` rows and 5,596,011 of 5,662,226
+`submission_summary` rows (the other 66,215 name a VariationID that is not in
+`variant_summary`); the 2026-10 release with gnomAD and MaveDB took 795.1 s.
+The loader's peak memory footprint was 3.78 GB and 4.44 GB (the database
+container not counted). The table row counts after both releases are the
+DuckDB counts above, the longest `variant_key` is 19,111 bytes, and
+`clinvar-history validate --dsn` passed all 18 checks.
 
 ## What is in it
 
@@ -119,12 +129,12 @@ Design notes:
 
 ## Limits
 
-- A full PostgreSQL load will stop at the primary key on
-  `variant.variant_key`: a B-tree cannot hold the longest ClinVar alleles. The
-  benchmark's index on the same values failed with "index row size 2880
-  exceeds btree version 4 maximum 2704"; the full load itself has not been
-  run. The PostgreSQL path is tested on fixtures and benchmarked on a flat
-  4.56 million-row table. `ROADMAP.md` item 1 replaces the key.
+- A B-tree row in PostgreSQL holds at most 2,704 bytes, and the longest
+  ClinVar alleles pass that, so a key on the allele text would stop a full
+  load. Migration 0008 keys `variant` by `variant_key_md5` instead, on both
+  engines, with a hash index on the text for lookups; a test loads a
+  10,000-base deletion on PostgreSQL, and the full load of both releases
+  ran there (Full build above).
 - gnomAD covers the ten panel genes and MaveDB seven of them; ClinVar is
   genome-wide. A MaveDB load replaces the score sets it names and keeps no
   history of earlier fetches.
