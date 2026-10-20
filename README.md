@@ -26,8 +26,9 @@ loads that cannot half-finish, and a record of which file each row came from.
 
 ```
 git clone https://github.com/Daneshpajouh/clinvar-history && cd clinvar-history
-python3 -m venv .venv && .venv/bin/pip install -e ".[postgres,dev]"
-.venv/bin/pytest -q
+python3 -m venv .venv && . .venv/bin/activate
+pip install -e ".[postgres,dev]"
+pytest -q
 ```
 
 ```
@@ -36,25 +37,28 @@ python3 -m venv .venv && .venv/bin/pip install -e ".[postgres,dev]"
 
 With a PostgreSQL server the same suite runs a second time against it
 (`docker compose up -d db`, then
-`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history .venv/bin/pytest -q`: 85 passed in
+`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 85 passed in
 5.58 s).
-The Docker image runs the same 85 tests on Debian:
-`docker build -t clinvar-history:1.0.1 .` then
-`docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.1 -m pytest -q`
-(85 passed in 6.79 s on 2026-10-19, image built from a fresh clone). Tagged
-releases publish the image as `ghcr.io/daneshpajouh/clinvar-history`.
+The Docker image carries the tests too:
+`docker build -t clinvar-history:1.0.2 .` then
+`docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.2 -m pytest -q`
+(85 passed in 6.79 s on 2026-10-19 with the 1.0.1 image, built from a fresh
+clone). CI builds the image and runs `clinvar-history version` through its
+default entrypoint; tagged releases publish it as
+`ghcr.io/daneshpajouh/clinvar-history` after the tests pass.
 
 ## Full build (real data)
 
-Needs Python 3.11 or newer, curl, bcftools (gnomAD is read by region from the
-remote VCF) and about 6 GB free in the data directory: 1.60 GB of raw files,
+Needs Python 3.11 or newer (CI tests 3.11 and 3.13) with the quick start's
+venv active, curl, bcftools (gnomAD is read by region from the remote VCF)
+and about 6 GB free in the data directory: 1.60 GB of raw files,
 0.59 GB of staging Parquet and a 3.4 GB DuckDB file in the 2026-10-19 build.
 
 ```
 export CLINVAR_HISTORY_DATA_DIR=/path/with/6GB/free
 clinvar-history fetch genes && clinvar-history fetch clinvar && clinvar-history fetch gnomad && clinvar-history fetch mavedb
 clinvar-history stage clinvar && clinvar-history stage gnomad && clinvar-history stage mavedb
-clinvar-history load            # add --dsn postgresql://... for PostgreSQL
+clinvar-history load            # --dsn postgresql://... for PostgreSQL; a full load fails there (Limits)
 clinvar-history validate
 clinvar-history query 03        # reclassifications between the two releases
 ```
