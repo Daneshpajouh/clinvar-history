@@ -9,9 +9,43 @@
 -- it on PostgreSQL.
 DROP VIEW v_variant_current;
 
-CREATE TEMP TABLE variant_0008 AS SELECT * FROM variant;
-CREATE TEMP TABLE clinvar_variation_0008 AS SELECT * FROM clinvar_variation;
-CREATE TEMP TABLE population_frequency_0008 AS SELECT * FROM population_frequency;
+CREATE TEMP TABLE variant_0008 AS
+SELECT
+    variant_key,
+    chrom,
+    pos,
+    ref,
+    alt,
+    variant_class
+FROM variant;
+
+CREATE TEMP TABLE clinvar_variation_0008 AS
+SELECT
+    variation_id,
+    allele_id,
+    variant_key,
+    gene_id,
+    name,
+    variant_type,
+    transcript,
+    hgvs_c,
+    protein_change,
+    hgvs_c_key,
+    hgvs_p_key,
+    first_release_id
+FROM clinvar_variation;
+
+CREATE TEMP TABLE population_frequency_0008 AS
+SELECT
+    variant_key,
+    release_id,
+    ancestry_group,
+    ac,
+    an,
+    af,
+    nhomalt,
+    filter
+FROM population_frequency;
 
 DROP TABLE population_frequency;
 DROP TABLE clinvar_variation;
@@ -69,7 +103,7 @@ SELECT
     ref,
     alt,
     variant_class,
-    md5(variant_key)
+    md5(variant_key) AS variant_key_md5
 FROM variant_0008;
 
 INSERT INTO clinvar_variation
@@ -86,7 +120,7 @@ SELECT
     hgvs_c_key,
     hgvs_p_key,
     first_release_id,
-    md5(variant_key)
+    md5(variant_key) AS variant_key_md5
 FROM clinvar_variation_0008;
 
 INSERT INTO population_frequency
@@ -99,7 +133,7 @@ SELECT
     af,
     nhomalt,
     filter,
-    md5(variant_key)
+    md5(variant_key) AS variant_key_md5
 FROM population_frequency_0008;
 
 DROP TABLE variant_0008;

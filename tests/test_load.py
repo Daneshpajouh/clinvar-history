@@ -171,8 +171,10 @@ def test_mavedb_load_without_files_is_skipped(empty_engine: Engine, tmp_path: Pa
 
 def test_allele_longer_than_a_btree_row_loads(empty_engine: Engine, tmp_path: Path) -> None:
     # A PostgreSQL B-tree row holds at most 2704 bytes, and the longest ClinVar
-    # alleles pass it (#1). Random bases, so compression cannot bring the key under.
-    ref = "".join(random.Random(1).choice("ACGT") for _ in range(10_000))
+    # alleles pass it (#1). Random bases from one generator, so compression
+    # cannot bring the key under.
+    rng = random.Random(1)
+    ref = "".join(rng.choice("ACGT") for _ in range(10_000))
     key = f"13-32315000-{ref}-{ref[0]}"
     paths = Paths(tmp_path)
     dest = paths.raw / "gnomad" / "gnomad.joint.v4.1.LONG.vcf.gz"
@@ -185,6 +187,8 @@ def test_allele_longer_than_a_btree_row_loads(empty_engine: Engine, tmp_path: Pa
     gnomad.stage(paths.raw / "gnomad", paths.staging, [], "4.1")
     migrate(empty_engine)
     assert load.load_gnomad(empty_engine, paths, "4.1") is True
-    _, rows = empty_engine.query("SELECT variant_key, variant_key_md5, variant_class FROM variant")
-    assert rows == [(key, hashlib.md5(key.encode()).hexdigest(), "deletion")]
+    _, rows = empty_engine.query("SELECT variant_key, variant_class FROM variant")
+    assert rows == [(key, "deletion")]
     assert empty_engine.scalar("SELECT count(*) FROM population_frequency") == 1
+    digest = hashlib.md5(key.encode()).hexdigest()
+    assert empty_engine.scalar("SELECT variant_key_md5 FROM variant") == digest

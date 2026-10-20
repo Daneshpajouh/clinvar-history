@@ -14,7 +14,7 @@ The format follows Keep a Changelog; versions follow Semantic Versioning.
   a hash index on `variant_key` for lookups. DuckDB rebuilds the three
   tables, because it cannot change a primary key in place. Cookbook query
   05 joins `population_frequency` on the digest, which leads its primary
-  key (#1).
+  key, and the data dictionary lists the digest columns (#1).
 - A wheel install now works: the migrations, the cookbook queries, the
   default config and its schema moved into `src/clinvar_history/` and are
   read through `importlib.resources`. Before, the package read them from the

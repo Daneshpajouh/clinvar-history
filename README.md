@@ -32,13 +32,13 @@ pytest -q
 ```
 
 ```
-65 passed, 1 skipped in 2.82s
+67 passed, 1 skipped in 3.44s
 ```
 
 With a PostgreSQL server the same suite runs a second time against it
 (`docker compose up -d db`, then
-`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 92 passed and
-1 skipped in 5.12 s).
+`CLINVAR_HISTORY_PG_DSN=postgresql://clinvar_history:clinvar_history@127.0.0.1:55432/clinvar_history pytest -q`: 96 passed and
+1 skipped in 8.74 s).
 The Docker image carries the tests too:
 `docker build -t clinvar-history:1.0.2 .` then
 `docker run --rm -e CLINVAR_HISTORY_PG_DSN=... --entrypoint python clinvar-history:1.0.2 -m pytest -q`
