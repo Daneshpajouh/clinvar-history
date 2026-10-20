@@ -206,10 +206,11 @@ def test_moved_allele_rekeys_the_variation(empty_engine: Engine, tmp_path: Path)
     moved = []
     for line in lines:
         fields = line.rstrip("\n").split("\t")
+        moved_line = line
         if fields[vid] == "1003" and fields[asm] == "GRCh38":
             fields[pos] = "7675089"
-            line = "\t".join(fields) + "\n"
-        moved.append(line)
+            moved_line = "\t".join(fields) + "\n"
+        moved.append(moved_line)
     subs = (DATA / "submission_summary_2025-10.tsv").read_text()
     paths = Paths(tmp_path)
     for release, variants in (("2025-10", "".join(lines)), ("2026-10", "".join(moved))):
