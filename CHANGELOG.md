@@ -2,6 +2,14 @@
 
 The format follows Keep a Changelog; versions follow Semantic Versioning.
 
+## Unreleased
+
+### Fixed
+
+- PostgreSQL: the loader role could not write `clinvar_variation_history`,
+  because 0005 granted only the tables that existed when it ran. Migration
+  0007 adds the grant and default privileges for later tables.
+
 ## 1.0.2 - 2026-10-19
 
 ### Changed

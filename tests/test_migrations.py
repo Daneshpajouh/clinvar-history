@@ -16,6 +16,20 @@ def test_engine_specific_files_are_filtered() -> None:
     assert "0005_roles.postgres.sql" in pg
 
 
+def test_loader_role_can_write_every_table(empty_engine: Engine) -> None:
+    # 0005 granted only the tables that existed then; 0006 added one after it
+    if empty_engine.name != "postgres":
+        pytest.skip("the roles exist only on PostgreSQL")
+    migrate(empty_engine)
+    _, rows = empty_engine.query(
+        "SELECT table_name FROM information_schema.tables"
+        " WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'"
+        " AND NOT has_table_privilege("
+        "'clinvar_history_loader', quote_ident(table_name), 'INSERT')"
+    )
+    assert [r[0] for r in rows] == []
+
+
 def test_migrate_twice_applies_nothing_new(empty_engine: Engine) -> None:
     first = migrate(empty_engine)
     assert first
