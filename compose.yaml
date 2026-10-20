@@ -16,7 +16,6 @@ services:
     build: .
     environment:
       CLINVAR_HISTORY_DATA_DIR: /data
-      CLINVAR_HISTORY_PG_DSN: postgresql://clinvar_history:clinvar_history@db:5432/clinvar_history
     volumes:
       - ${CLINVAR_HISTORY_DATA_DIR:-./data}:/data
     depends_on:
