@@ -14,8 +14,10 @@ from clinvar_history import load
 from clinvar_history.config import Paths
 from clinvar_history.db import Engine, migrate
 from clinvar_history.fetch import record
-from clinvar_history.sources import gnomad
+from clinvar_history.sources import clinvar, gnomad
 from clinvar_history.validate import run_checks
+
+from .conftest import DATA
 
 TABLES = [
     "source_release",
@@ -192,3 +194,55 @@ def test_allele_longer_than_a_btree_row_loads(empty_engine: Engine, tmp_path: Pa
     assert empty_engine.scalar("SELECT count(*) FROM population_frequency") == 1
     digest = hashlib.md5(key.encode()).hexdigest()
     assert empty_engine.scalar("SELECT variant_key_md5 FROM variant") == digest
+
+
+def test_moved_allele_rekeys_the_variation(empty_engine: Engine, tmp_path: Path) -> None:
+    # ClinVar can correct a variation's VCF position between releases. The load
+    # must point the variation at the new variant row, and the unload back at
+    # the old one, so both UPDATEs have to rewrite variant_key_md5 (0008).
+    lines = (DATA / "variant_summary_2025-10.tsv").read_text().splitlines(keepends=True)
+    header = lines[0].rstrip("\n").split("\t")
+    vid, asm, pos = (header.index(c) for c in ("VariationID", "Assembly", "PositionVCF"))
+    moved = []
+    for line in lines:
+        fields = line.rstrip("\n").split("\t")
+        if fields[vid] == "1003" and fields[asm] == "GRCh38":
+            fields[pos] = "7675089"
+            line = "\t".join(fields) + "\n"
+        moved.append(line)
+    subs = (DATA / "submission_summary_2025-10.tsv").read_text()
+    paths = Paths(tmp_path)
+    for release, variants in (("2025-10", "".join(lines)), ("2026-10", "".join(moved))):
+        for kind, text in (("variant_summary", variants), ("submission_summary", subs)):
+            dest = paths.raw / "clinvar" / f"{kind}_{release}.txt.gz"
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with gzip.open(dest, "wt") as fh:
+                fh.write(text)
+            record(
+                paths,
+                source="clinvar",
+                release=release,
+                url=f"fixture://{dest.name}",
+                path=dest,
+                method="fixture",
+            )
+        clinvar.stage_release(paths.raw / "clinvar", paths.staging, release)
+
+    def v3() -> list[Any]:
+        sql = "SELECT variant_key, variant_key_md5 FROM clinvar_variation WHERE variation_id = 1003"
+        return empty_engine.query(sql)[1]
+
+    old, new = "17-7675088-C-T", "17-7675089-C-T"
+    migrate(empty_engine)
+    load.load_clinvar(empty_engine, paths, "2025-10")
+    assert v3() == [(old, hashlib.md5(old.encode()).hexdigest())]
+    load.load_clinvar(empty_engine, paths, "2026-10")
+    assert v3() == [(new, hashlib.md5(new.encode()).hexdigest())]
+    joined = (
+        "SELECT v.variant_key FROM clinvar_variation AS cv INNER JOIN variant AS v"
+        " ON cv.variant_key_md5 = v.variant_key_md5 WHERE cv.variation_id = 1003"
+    )
+    assert empty_engine.scalar(joined) == new
+    assert load.unload_latest_clinvar(empty_engine) == "2026-10"
+    assert v3() == [(old, hashlib.md5(old.encode()).hexdigest())]
+    assert empty_engine.scalar(joined) == old
