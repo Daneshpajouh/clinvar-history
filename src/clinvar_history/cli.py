@@ -233,7 +233,7 @@ def validate(
 
 @app.command()
 def query(
-    name: Annotated[str, typer.Argument(help="File stem in sql/queries, or a path to a .sql file")],
+    name: Annotated[str, typer.Argument(help="Cookbook query file stem, or a path to a .sql file")],
     data_dir: DataDirOpt = None,
     dsn: DsnOpt = None,
     fmt: Annotated[str, typer.Option("--format", help="table, csv or json")] = "table",

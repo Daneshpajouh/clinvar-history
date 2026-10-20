@@ -6,6 +6,13 @@ The format follows Keep a Changelog; versions follow Semantic Versioning.
 
 ### Fixed
 
+- A wheel install now works: the migrations, the cookbook queries, the
+  default config and its schema moved into `src/clinvar_history/` and are
+  read through `importlib.resources`. Before, the package read them from the
+  checkout, so `pip install clinvar-history` then `migrate()` stopped with an
+  error. Without a checkout the default data directory is `data/` in the
+  working directory. CI builds the wheel, installs it in a fresh
+  environment and runs a migrate, a fixture load and one query (#2).
 - PostgreSQL: the loader role could not write `clinvar_variation_history`,
   because 0005 granted only the tables that existed when it ran. Migration
   0007 adds the grant and default privileges for later tables.

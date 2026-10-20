@@ -11,10 +11,10 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from clinvar_history.config import REPO_ROOT
+from clinvar_history.config import PACKAGE_DATA
 from clinvar_history.db import Engine
 
-QUERY_DIR = REPO_ROOT / "sql" / "queries"
+QUERY_DIR = PACKAGE_DATA / "sql" / "queries"
 
 
 def resolve(name: str) -> Path:
