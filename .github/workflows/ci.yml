@@ -4,10 +4,14 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.13"]
     services:
       postgres:
         image: postgres@sha256:00bc86618629af00d2937fdc5a5d63db3ff8450acf52f0636ec813c7f4902929
@@ -24,10 +28,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python }}
       - run: pip install -e ".[postgres,dev]"
       - run: ruff check src tests
       - run: ruff format --check src tests
       - run: mypy
       - run: sqlfluff lint migrations sql
       - run: pytest --cov=clinvar_history --cov-report=term
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t clinvar-history:ci .
+      # the default entrypoint, as a user runs the published image
+      - run: test "$(docker run --rm clinvar-history:ci version)" = "$(grep -m1 '^version' pyproject.toml | cut -d'"' -f2)"

@@ -18,5 +18,5 @@ RUN pip install --no-cache-dir -e ".[postgres,dev]"
 
 ENV CLINVAR_HISTORY_DATA_DIR=/data
 VOLUME ["/data"]
-ENTRYPOINT ["clinvar_history"]
+ENTRYPOINT ["clinvar-history"]
 CMD ["--help"]
