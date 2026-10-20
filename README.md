@@ -58,7 +58,7 @@ and about 6 GB free in the data directory: 1.60 GB of raw files,
 export CLINVAR_HISTORY_DATA_DIR=/path/with/6GB/free
 clinvar-history fetch genes && clinvar-history fetch clinvar && clinvar-history fetch gnomad && clinvar-history fetch mavedb
 clinvar-history stage clinvar && clinvar-history stage gnomad && clinvar-history stage mavedb
-clinvar-history load            # --dsn postgresql://... for PostgreSQL; a full load fails there (Limits)
+clinvar-history load            # add --dsn postgresql://... for PostgreSQL
 clinvar-history validate
 clinvar-history query 03        # reclassifications between the two releases
 ```
@@ -119,12 +119,12 @@ Design notes:
 
 ## Limits
 
-- A full PostgreSQL load will stop at the primary key on
-  `variant.variant_key`: a B-tree cannot hold the longest ClinVar alleles. The
-  benchmark's index on the same values failed with "index row size 2880
-  exceeds btree version 4 maximum 2704"; the full load itself has not been
-  run. The PostgreSQL path is tested on fixtures and benchmarked on a flat
-  4.56 million-row table. `ROADMAP.md` item 1 replaces the key.
+- A B-tree row in PostgreSQL holds at most 2,704 bytes, and the longest
+  ClinVar alleles pass that, so a key on the allele text would stop a full
+  load. Migration 0008 keys `variant` by `variant_key_md5` instead, on both
+  engines, with a hash index on the text for lookups; a test loads a
+  10,000-base deletion on PostgreSQL. The full 2025-10 load on PostgreSQL
+  has not been run yet, so its row counts and time are not given here.
 - gnomAD covers the ten panel genes and MaveDB seven of them; ClinVar is
   genome-wide. A MaveDB load replaces the score sets it names and keeps no
   history of earlier fetches.

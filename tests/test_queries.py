@@ -110,7 +110,8 @@ def test_frequency_queries_read_only_the_latest_gnomad_release(
     old = empty_engine.scalar("SELECT release_id FROM source_release WHERE label = '4.0'")
     empty_engine.execute(
         "INSERT INTO population_frequency (variant_key, release_id, ancestry_group, ac, an, af,"
-        " nhomalt, filter) VALUES ('17-43045712-G-A', ?, 'afr', 1000, 2000, 0.5, 0, 'PASS')",
+        " nhomalt, filter, variant_key_md5) VALUES ('17-43045712-G-A', ?, 'afr', 1000, 2000,"
+        " 0.5, 0, 'PASS', md5('17-43045712-G-A'))",
         [old],
     )
     assert [r[4:6] for r in rows(empty_engine, "05")] == [("afr", 0.002)]

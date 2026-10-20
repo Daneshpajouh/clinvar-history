@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import gzip
+import hashlib
+import random
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +13,8 @@ import pytest
 from clinvar_history import load
 from clinvar_history.config import Paths
 from clinvar_history.db import Engine, migrate
+from clinvar_history.fetch import record
+from clinvar_history.sources import gnomad
 from clinvar_history.validate import run_checks
 
 TABLES = [
@@ -162,3 +167,24 @@ def test_mavedb_load_without_files_is_skipped(empty_engine: Engine, tmp_path: Pa
     migrate(empty_engine)
     assert load.load_mavedb(empty_engine, Paths(tmp_path)) is False
     assert empty_engine.scalar("SELECT count(*) FROM score_set") == 0
+
+
+def test_allele_longer_than_a_btree_row_loads(empty_engine: Engine, tmp_path: Path) -> None:
+    # A PostgreSQL B-tree row holds at most 2704 bytes, and the longest ClinVar
+    # alleles pass it (#1). Random bases, so compression cannot bring the key under.
+    ref = "".join(random.Random(1).choice("ACGT") for _ in range(10_000))
+    key = f"13-32315000-{ref}-{ref[0]}"
+    paths = Paths(tmp_path)
+    dest = paths.raw / "gnomad" / "gnomad.joint.v4.1.LONG.vcf.gz"
+    dest.parent.mkdir(parents=True)
+    info = "AC_joint=1;AN_joint=10000;AF_joint=0.0001;nhomalt_joint=0"
+    with gzip.open(dest, "wt") as fh:
+        fh.write("##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+        fh.write(f"chr13\t32315000\t.\t{ref}\t{ref[0]}\t.\tPASS\t{info}\n")
+    record(paths, source="gnomad", release="4.1", url="fixture://long", path=dest, method="fixture")
+    gnomad.stage(paths.raw / "gnomad", paths.staging, [], "4.1")
+    migrate(empty_engine)
+    assert load.load_gnomad(empty_engine, paths, "4.1") is True
+    _, rows = empty_engine.query("SELECT variant_key, variant_key_md5, variant_class FROM variant")
+    assert rows == [(key, hashlib.md5(key.encode()).hexdigest(), "deletion")]
+    assert empty_engine.scalar("SELECT count(*) FROM population_frequency") == 1

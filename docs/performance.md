@@ -79,5 +79,7 @@ Some ClinVar alleles are kilobases long, and the key carries both alleles.
 The benchmark uses a hash index, which stores a 4-byte hash and serves
 equality lookups (0.48 ms). The warehouse's primary key on
 `variant.variant_key` is a B-tree on the same values, so a full PostgreSQL
-load is expected to fail the same way; that load has not been run.
-`ROADMAP.md` milestone 1 covers it.
+load was expected to fail the same way. Migration 0008 moved the primary
+key and the foreign keys to `variant_key_md5`, the md5 of the key (32
+characters), and added a hash index on `variant_key` for lookups by the
+text. The full load on PostgreSQL is `ROADMAP.md` milestone 1.

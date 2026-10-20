@@ -53,7 +53,7 @@ ZERO_CHECKS: dict[str, str] = {
     ),
     "gnomAD rows reference a known variant": (
         "SELECT count(*) FROM population_frequency AS pf LEFT JOIN variant AS v"
-        " ON pf.variant_key = v.variant_key WHERE v.variant_key IS NULL"
+        " ON pf.variant_key_md5 = v.variant_key_md5 WHERE v.variant_key_md5 IS NULL"
     ),
     "score sets carry a licence": (
         "SELECT count(*) FROM score_set WHERE licence IS NULL OR licence = ''"
